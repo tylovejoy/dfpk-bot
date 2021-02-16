@@ -7,7 +7,7 @@ RUN useradd -m -d /home/dfpk-bot -s /bin/bash dfpk-bot
 
 RUN mkdir /usr/src/dfpk-bot
 
-RUN chown -R discordbot /usr/src/dfpk-bot
+RUN chown -R dfpk-bot /usr/src/dfpk-bot
 USER dfpk-bot
 
 COPY requirements.txt ./

@@ -1,8 +1,10 @@
 from discord import Intents
 
+
 class InvalidFlagException(Exception):
     """An exception thrown when an invalid intent flag is passed"""
     pass
+
 
 def calculate_intents(raw):
     """

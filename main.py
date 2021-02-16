@@ -11,6 +11,7 @@ from internal.botclass import Bot
 from internal.intentcalculator import calculate_intents
 from internal.keepalive import keep_alive
 
+
 def load_config():
     from os.path import join, dirname
     from dotenv import load_dotenv
@@ -21,7 +22,7 @@ def load_config():
     # Load file from the path.
     load_dotenv(dotenv_path)
 
-    with open('data/config.json', 'r', encoding='utf-8') as doc:
+    with open('data/config.json', 'r', encoding='utf-8-sig') as doc:
         #  Please make sure encoding is correct, especially after editing the config file
         return json.load(doc)
 
@@ -55,11 +56,11 @@ async def run():
             get_config_var('MONGO_DATABASE_NAME', config, 'mongoDbName', fallback='dpytemplate_default_db')
         )
 
-
     bot = Bot(
             config=config,
             description=config['description'],
-            intents=intents
+            intents=intents,
+            case_insensitive=config['case_insensitive']
         )
 
     bot.config = config

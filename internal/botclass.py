@@ -1,17 +1,19 @@
 import asyncio
 import datetime
-import time
 from pathlib import Path
-
 import discord
 from discord.ext import commands
+from pretty_help import PrettyHelp
+
 
 class Bot(commands.Bot):
     def __init__(self, **kwargs):
         super().__init__(
             command_prefix=self.get_prefix_,
             description=kwargs.pop('description'),
-            intents=kwargs.pop('intents')
+            intents=kwargs.pop('intents'),
+            case_insensitive=kwargs.pop('case_insensitive'),
+            help_command=PrettyHelp(show_index=False, color=discord.Color.purple())
         )
         self.start_time = None
         self.app_info = None
@@ -52,7 +54,7 @@ class Bot(commands.Bot):
                 error = f'{extension}\n {type(e).__name__} : {e}'
                 print(f'failed to load extension {error}')
             print('-' * 10)
-        self.load_extension('jishaku')
+        # self.load_extension('jishaku')
 
     async def on_ready(self):
         """
@@ -62,8 +64,7 @@ class Bot(commands.Bot):
         self.app_info = await self.application_info()
         print(f'Logged in as: {self.user.name}\n'
               f'Using discord.py version: {discord.__version__}\n'
-              f'Owner: {self.app_info.owner}\n'
-              f'Template Maker: SourSpoon / Spoon#0001')
+              f'Owner: {self.app_info.owner}\n')
         print('-' * 10)
 
     async def on_message(self, message):

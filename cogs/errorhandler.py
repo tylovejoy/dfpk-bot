@@ -4,6 +4,7 @@ from discord.ext import commands
 import traceback
 from datetime import datetime
 
+
 class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -54,7 +55,7 @@ class ErrorHandler(commands.Cog):
         commands.NoPrivateMessage: 'This command cannot be used in private messages',
         commands.BotMissingPermissions: '{err}',
         commands.DisabledCommand: 'This command is disabled and cannot be used',
-        commands.CheckFailure: '{err}',
+        commands.CheckFailure: 'This command cannot be used here or you have insufficient permissions',
         commands.CommandOnCooldown: '{err}',
         commands.MissingRequiredArgument: 'You are missing a required argument! (See `{ctx.prefix}help {ctx.command.qualified_name}` for info on how to use this command).',
         commands.BadArgument: 'Invalid argument given! (See `{ctx.prefix}help {ctx.command.qualified_name}` for info on how to use this command).',
@@ -90,11 +91,12 @@ class ErrorHandler(commands.Cog):
             embed.add_field(name='Sender', value=f'{str(ctx.author)} (`{ctx.author.id}`)')
             embed.add_field(name='Exception', value=error)
 
-            formatted_traceback = self._format_traceback(error, 2042) # Embed desc limit is 2048 characters, which includes the codeblock markers
+            formatted_traceback = self._format_traceback(error, 2042)  # Embed desc limit is 2048 characters, which includes the codeblock markers
 
             embed.description = f'```{formatted_traceback}```'
 
             await self._send_traceback_embed(ctx, embed)
+
 
 def setup(bot):
     bot.add_cog(ErrorHandler(bot))

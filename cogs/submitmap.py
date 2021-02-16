@@ -1,0 +1,148 @@
+import discord
+from discord.ext import commands
+import asyncio
+from internal import constants, utilities, confirmation
+from database.MapData import MapData
+from mongosanitizer.sanitizer import sanitize
+import prettytable
+
+
+def map_name_converter(map_name):
+    for i in range(len(constants.ALL_MAP_NAMES)):
+        if map_name in constants.ALL_MAP_NAMES[i]:
+            return constants.ALL_MAP_NAMES[i][0]
+    else:
+        return False
+
+
+class SubmitMap(commands.Cog, name="Map submission/deletion"):
+    def __init__(self, bot):
+        self.bot = bot
+
+    async def cog_check(self, ctx):
+        if ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID:
+            return True
+
+    @commands.command(
+        help=("Submit map code with optional description.\n\n"
+              "If multiple entries for <creator>, wrap both in a single set of quotation marks!\n"  # noqa: E501
+              "Example: \"name1 & name2\"\n\n"
+              f"<type> can be {' | '.join(constants.TYPES_OF_MAP)}\n"
+              "[desc] is optional, no need to wrap in quotation marks. Use this to add # of levels, checkpoints, etc."),
+        brief="Submit map code",
+    )
+    async def submitmap(self, ctx, map_code, map_name, map_type, creator, *, desc=""):
+        for x in map_code:
+            if x not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789':
+                await ctx.send(
+                    "Only letters A-Z and numbers 0-9 allowed in <map_code>. Map submission rejected.")
+                return
+        if not map_name_converter(map_name):
+            await ctx.send("<map_name> doesn't exist! Map submission rejected.")
+            return
+        map_type = [x.lower() for x in map_name.split()]
+        for x in map_type:
+            if map_type not in constants.TYPES_OF_MAP:
+                await ctx.send("<map_type> doesn't exist! Map submission rejected.")
+                return
+        map_code = map_code.upper()
+        map_name = map_name.lower()
+
+        if await MapData.count_documents({"_id": map_code}) == 0:
+
+            new_map_name = map_name_converter(map_name)
+            submission = MapData(**dict(code=map_code, creator=creator,
+                                        map_name=new_map_name, desc=desc,
+                                        posted_by=ctx.author.id, type=map_type))
+
+            pt = prettytable.PrettyTable()
+            pt.field_names = ["Map Code", "Map Type", "Map Name", "Description",
+                              "Creator"]
+            pt.add_row([submission.code, submission.type.upper(),
+                        constants.PRETTY_NAMES[submission.map_name], submission.desc,
+                        submission.creator])
+
+            msg = await ctx.send(f"```\nYou submitted:\n{pt}\nIs this correct?```")
+            confirmed = await confirmation.confirm(ctx, msg)
+
+            if confirmed is True:
+                await msg.edit(
+                    content=f'{constants.CONFIRM_REACTION_EMOJI} Confirmed! Map submission accepted.')
+                await submission.commit()
+            elif confirmed is False:
+                await msg.edit(
+                    content=f'{constants.CANCEL_REACTION_EMOJI} Map submission rejected.')
+            elif confirmed is None:
+                await msg.edit(content=f'Submission timed out! Map submission rejected.')
+
+        else:
+            await ctx.send("<map_code> already exists! Map submission rejected.")
+
+    # Delete map code
+    @commands.command(
+        help="Delete map code",
+        brief="Delete map code",
+    )
+    async def deletemap(self, ctx, map_code):
+        map_code = map_code.upper()
+        if await MapData.count_documents({"_id": map_code}) == 1:
+            search = await MapData.find_one({"_id": map_code})
+            if search.posted_by == ctx.author.id or (True if any(
+                    role.id in constants.ROLE_WHITELIST for role in
+                    ctx.author.roles) else False):
+                pt = prettytable.PrettyTable()
+                pt.field_names = ["Map Code", "Map Type", "Map Name", "Description",
+                                  "Creator"]
+                pt.add_row([search.code, search.type.upper(),
+                            constants.PRETTY_NAMES[search.map_name], search.desc,
+                            search.creator])
+                msg = await ctx.send(
+                    f"```\nAre you sure you want to delete {map_code}?\n{pt}```")
+                confirmed = await confirmation.confirm(ctx, msg)
+                if confirmed is True:
+                    await msg.edit(content=f'{search.code} has been deleted.')
+                    await search.delete()
+                elif confirmed is False:
+                    await msg.edit(content=f'{search.code} has not been deleted.')
+                elif confirmed is None:
+                    await msg.edit(
+                        content=f'Submission timed out! {search.code} has not been deleted.')
+            else:
+                await ctx.channel.send(
+                    "You do not have sufficient permissions. Map was not deleted.")
+        else:
+            await ctx.channel.send(f"{map_code} does not exist.")
+
+    @commands.command(
+        help="Edit description for a certain map code",
+        brief="Edit description for a certain map code",
+    )
+    async def edit(self, ctx, map_code, *, desc):
+        map_code = map_code.upper()
+        if await MapData.count_documents({"_id": map_code}) == 1:
+            search = await MapData.find_one({"_id": map_code})
+            if search.posted_by == ctx.author.id or (True if any(
+                    role.id in constants.ROLE_WHITELIST for role in
+                    ctx.author.roles) else False):
+                search.desc = desc
+                pt = prettytable.PrettyTable()
+                pt.field_names = ["Map Code", "Map Type", "Map Name", "Description",
+                                  "Creator"]
+                pt.add_row([search.code, search.type.upper(),
+                            constants.PRETTY_NAMES[search.map_name], search.desc,
+                            search.creator])
+                msg = await ctx.send(f"```\n{map_code}: Is this edit correct?\n{pt}```")
+                confirmed = await confirmation.confirm(ctx, msg)
+                if confirmed is True:
+                    await msg.edit(content=f'{search.code} has been edited.')
+                    await search.commit()
+                elif confirmed is False:
+                    await msg.edit(content=f'{search.code} has not been edited.')
+                elif confirmed is None:
+                    await msg.edit(
+                        content=f'Submission timed out! {search.code} has not been edited.')
+                await msg.clear_reactions()
+
+
+def setup(bot):
+    bot.add_cog(SubmitMap(bot))

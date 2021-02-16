@@ -1,0 +1,173 @@
+import discord
+from discord.ext import commands
+import asyncio
+from internal import constants, utilities, confirmation
+from database.WorldRecords import WorldRecords
+from mongosanitizer.sanitizer import sanitize
+import prettytable
+import datetime
+import logging
+
+
+class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion"):
+    def __init__(self, bot):
+        self.bot = bot
+
+    async def cog_check(self, ctx):
+        if ctx.channel.id == constants.RECORD_CHANNEL_ID:
+            return True
+
+    # Submit personal best records
+    @commands.command(
+        help=(
+                "Submit personal bests. Upload a screenshot with this message for proof!\n"  # noqa: E501
+                "There will be a link in the world record leaderboards to the original post.\n"  # noqa: E501
+                "Also updates a personal best if it is faster.\n\n"
+                "<record> must be in SECONDS.\n"
+                "Use the /converttime command to easily convert your time to seconds."),
+        brief="Submit personal best",
+    )
+    async def submitpb(self, ctx, map_code, level, record):
+        # input validation
+        for x in map_code:
+            if x not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789':
+                await ctx.send(
+                    "Only letters A-Z and numbers 0-9 allowed in <map_code>. Map submission rejected.")
+                return
+        record_in_seconds = utilities.time_convert(record)
+        if record_in_seconds:
+            map_code = map_code.upper()
+            which_place = False
+            submission, search = None, None
+            # main
+            if await WorldRecords.count_documents(
+                    {"code": map_code, "level": level, "posted_by": ctx.author.id}) == 0:
+                submission = WorldRecords(
+                    **dict(code=map_code, name=ctx.author.name,
+                                    record=record_in_seconds, level=level,
+                                    posted_by=ctx.author.id,
+                                    message_id=ctx.message.id,
+                                    url=ctx.message.jump_url,
+                                    verified=False))
+
+                pt = prettytable.PrettyTable()
+                pt.field_names = ["Map Code", "Level", "Record", "Name"]
+                pt.add_row([submission.code, submission.level,
+                            utilities.display_record(record_in_seconds), submission.name])
+                msg = await ctx.send(f"```\nIs this correct?\n{pt}```")
+                confirmed = await confirmation.confirm(ctx, msg)
+
+                if confirmed is True:
+                    await msg.edit(content=f'```\n{pt}```\nSubmission accepted')
+
+                    channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
+
+                    hidden_msg = await channel.send(
+                        f"{submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}")
+                    submission.hidden_id = hidden_msg.id
+                    await submission.commit()
+                    await ctx.message.add_reaction(constants.VERIFIED_EMOJI)
+                    await ctx.message.add_reaction(constants.NOT_VERIFIED_EMOJI)
+                    which_place = True
+                elif confirmed is False:
+                    await msg.edit(content=f'Submission has not been accepted.')
+                elif confirmed is None:
+                    await msg.edit(
+                        content=f'Submission timed out! Submission has not been accepted.')
+
+            elif await WorldRecords.count_documents(
+                    {"code": map_code, "level": level, "posted_by": ctx.author.id}) == 1:
+                submission = await WorldRecords.find_one(
+                    {"code": map_code, "level": level, "posted_by": ctx.author.id})
+                if record_in_seconds < submission.record:
+                    pt = prettytable.PrettyTable()
+                    pt.field_names = ["Map Code", "Level", "Record", "Name"]
+                    pt.add_row([submission.code, submission.level,
+                                utilities.display_record(record_in_seconds),
+                                submission.name])
+                    msg = await ctx.send(f"```\nIs this correct?\n{pt}```")
+                    confirmed = await confirmation.confirm(ctx, msg)
+
+                    if confirmed is True:
+                        await msg.edit(content=f'```\n{pt}```\nSubmission accepted')
+                        submission.record = record_in_seconds
+                        submission.message_id = ctx.message.id
+                        submission.url = ctx.message.jump_url
+                        submission.name = ctx.author.name
+                        submission.verified = False
+
+                        channel = self.bot.get_channel(
+                            constants.HIDDEN_VERIFICATION_CHANNEL)
+                        hidden_msg = await channel.send(
+                            f"{submission.name} - {submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}")
+                        submission.hidden_id = hidden_msg.id
+                        await submission.commit()
+
+                        await ctx.message.add_reaction(constants.VERIFIED_EMOJI)
+                        await ctx.message.add_reaction(constants.NOT_VERIFIED_EMOJI)
+                        which_place = True
+                    elif confirmed is False:
+                        await msg.edit(content=f'Submission has not been accepted.')
+                    elif confirmed is None:
+                        await msg.edit(
+                            content=f'Submission timed out! Submission has not been accepted.')
+
+                else:
+                    await ctx.channel.send(
+                        "Personal best needs to be faster to update."
+                    )
+            if which_place:
+                update = WorldRecords.find({"code": map_code, "level": level}).sort(
+                    "record", 1).limit(10)
+                rank = 0
+                async for entry in update:
+                    rank += 1
+                    if submission:
+                        if entry.pk == submission.pk:
+                            await ctx.channel.send(
+                                f"Your rank is {rank} on the unverified scoreboard."
+                            )
+
+    # Delete pb
+    @commands.command(
+        help="Delete personal best record for a particular map code.\n<name> will default to your own. This is only required for when a mod deletes another person's personal best.",
+        brief="Delete personal best record",
+    )
+    async def deletepb(self, ctx, map_code, level, name=""):
+        map_code = map_code.upper()
+        if name == "":
+            name = ctx.author.name
+        if await WorldRecords.count_documents(
+                {"code": map_code, "level": level, "name": name}) == 1:
+            search = await WorldRecords.find_one(
+                {"code": map_code, "level": level, "name": name})
+
+            if search.posted_by == ctx.author.id or (True if any(
+                    role.id in constants.ROLE_WHITELIST for role in
+                    ctx.author.roles) else False):
+                pt = prettytable.PrettyTable()
+                pt.field_names = ["Map Code", "Level", "Record", "Name", "Verified"]
+                pt.add_row([search.code, search.level,
+                            utilities.display_record(search.record),
+                            search.name, search.verified])
+                msg = await ctx.send(f"```\nDo you want to delete this?\n{pt}```")
+                confirmed = await confirmation.confirm(ctx, msg)
+                if confirmed is True:
+                    await msg.edit(content=f'Personal best deleted succesfully.')
+                    await search.delete()
+                elif confirmed is False:
+                    await msg.edit(content=f'Personal best was not deleted.')
+                elif confirmed is None:
+                    await msg.edit(
+                        content=f'Deletion timed out! Personal best has not been deleted.')
+
+            else:
+                await ctx.channel.send("You cannot delete that!")
+        else:
+            await ctx.channel.send(
+                "Provided arguments might not exist. Personal best deletion was unsuccesful."
+            )
+
+
+def setup(bot):
+    bot.add_cog(SubmitPersonalBest(bot))

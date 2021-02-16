@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio
 from internal import constants
 
+
 async def confirm(ctx: commands.Context, message: discord.Message):
     """
     Creates a confirm/cancel reaction menu that returns True or False depending on which reaction was clicked.
@@ -17,12 +18,15 @@ async def confirm(ctx: commands.Context, message: discord.Message):
     await message.add_reaction(constants.CANCEL_REACTION_EMOJI)
 
     try:
-        reaction, user = await ctx.bot.wait_for('reaction_add', timeout=120.0, check=check)
+        reaction, user = await ctx.bot.wait_for('reaction_add', timeout=30, check=check)
 
         emoji = str(reaction.emoji)
 
         if emoji == constants.CONFIRM_REACTION_EMOJI:
+            await message.clear_reactions()
             return True
+        await message.clear_reactions()
         return False
     except asyncio.TimeoutError:
+        await message.clear_reactions()
         return None

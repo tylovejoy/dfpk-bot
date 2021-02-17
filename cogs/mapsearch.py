@@ -120,7 +120,7 @@ class MapSearch(commands.Cog, name="Map Search"):
                 [entry.code, fill(' '.join(entry.type), constants.TYPE_MAX_LENGTH), constants.PRETTY_NAMES[entry.map_name],
                  fill(entry.desc, constants.DESC_MAX_LENGTH),
                  fill(entry.creator, constants.CREATOR_MAX_LENGTH)])
-            post = 1
+            row = 1
         if row:
             await ctx.send(f"```\n{pt}```")
         else:

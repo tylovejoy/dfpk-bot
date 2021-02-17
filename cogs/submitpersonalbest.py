@@ -29,6 +29,10 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
     )
     async def submitpb(self, ctx, map_code, level, record):
         # input validation
+        if '$' in map_code or '$' in level or '$' in record:
+            map_code.replace('$', '')
+            level.replace('$', '')
+            record.replace('$', '')
         for x in map_code:
             if x not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789':
                 await ctx.send(
@@ -146,6 +150,10 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         brief="Delete personal best record",
     )
     async def deletepb(self, ctx, map_code, level, name=""):
+        if '$' in map_code or '$' in level or '$' in name:
+            map_code.replace('$', '')
+            level.replace('$', '')
+            name.replace('$', '')
         map_code = map_code.upper()
         if name == "":
             name = ctx.author.name

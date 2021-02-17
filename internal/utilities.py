@@ -1,6 +1,6 @@
 import datetime
 import re
-
+import prettytable
 
 def split_posts(post):
     groups = post.split("\n")

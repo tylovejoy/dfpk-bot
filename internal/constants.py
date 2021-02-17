@@ -4,8 +4,8 @@ If you wish to add or edit a constant, please make sure to comment the meaning o
 """
 # Customize the following
 
-TYPES_OF_MAP = ["single", "multi", "pio", "time-attack", "megamap", "multimap",
-                "tutorial"]
+TYPES_OF_MAP = ["SINGLE", "MULTI", "PIO", "TIME-ATTACK", "MEGAMAP", "MULTIMAP",
+                "TUTORIAL"]
 #                |      Admin       |        Mod        |     Tourny Org    |    Record Org     |
 ROLE_WHITELIST = [699145313520320542, 725198459627634689, 758399333942558800,
                   808426677562114122, 810185380833918976]  # DELETE LAST ID!!!!!!!!!
@@ -37,6 +37,12 @@ NOT_VERIFIED_EMOJI = '❌'
 
 # Prettytable page size
 PT_PAGE_SIZE = 10
+
+# creator / desc max_lengths
+CREATOR_MAX_LENGTH = 60
+DESC_MAX_LENGTH = 60
+TYPE_MAX_LENGTH = 20
+
 
 # Map names | CUSTOMIZE ACCEPTABLE NAMES
 AYUTTHAYA = ["ayutthaya", "ayutt"]

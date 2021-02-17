@@ -25,8 +25,8 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
 
     @commands.command(
         help=("Submit map code with optional description.\n\n"
-              "If multiple entries for <creator>, wrap both in a single set of quotation marks!\n"  # noqa: E501
-              "Example: \"name1 & name2\"\n\n"
+              "If multiple entries for <creator> OR <map_type>, wrap both in a single set of quotation marks!\n"  # noqa: E501
+              "Example: \"name1 & name2\" OR \"pioneer hardcore\"\n\n"
               f"<type> can be {' | '.join(constants.TYPES_OF_MAP)}\n"
               "[desc] is optional, no need to wrap in quotation marks. Use this to add # of levels, checkpoints, etc."),
         brief="Submit map code",
@@ -38,12 +38,12 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     "Only letters A-Z and numbers 0-9 allowed in <map_code>. Map submission rejected.")
                 return
         if not map_name_converter(map_name):
-            await ctx.send("<map_name> doesn't exist! Map submission rejected.")
+            await ctx.send("<map_name> doesn't exist! Map submission rejected. Use `/maps` for a list of acceptable maps.")
             return
-        map_type = [x.lower() for x in map_name.split()]
+        map_type = [x.upper() for x in map_type.split()]
         for x in map_type:
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send("<map_type> doesn't exist! Map submission rejected.")
+            if x not in constants.TYPES_OF_MAP:
+                await ctx.send("<map_type> doesn't exist! Map submission rejected. Use `/maptypes` for a list of acceptable map types.")
                 return
         map_code = map_code.upper()
         map_name = map_name.lower()
@@ -58,7 +58,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
             pt = prettytable.PrettyTable()
             pt.field_names = ["Map Code", "Map Type", "Map Name", "Description",
                               "Creator"]
-            pt.add_row([submission.code, submission.type.upper(),
+            pt.add_row([submission.code, '\n'.join(submission.type),
                         constants.PRETTY_NAMES[submission.map_name], submission.desc,
                         submission.creator])
 
@@ -114,7 +114,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
             await ctx.channel.send(f"{map_code} does not exist.")
 
     @commands.command(
-        help="Edit description for a certain map code",
+        help="Edit description for a certain map code. A code's current description will be overwritten by <desc>.",
         brief="Edit description for a certain map code",
     )
     async def edit(self, ctx, map_code, *, desc):

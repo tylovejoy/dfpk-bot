@@ -168,7 +168,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 await msg.clear_reactions()
 
     @commands.command(
-        help="Edit map types for a certain map code.\n<map_type> will overwrite current map_types.\nOnly original posters and mods can edit a map code.",
+        help="Edit map types for a certain map code.\n<map_type> will overwrite current map types.\nOnly original posters and mods can edit a map code.",
         brief="Edit map types for a certain map code",
     )
     async def edittypes(self, ctx, map_code, *, map_type):

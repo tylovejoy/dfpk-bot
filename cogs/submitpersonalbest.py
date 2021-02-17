@@ -100,10 +100,12 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     if confirmed is True:
                         # Delete standing hidden channel post, if applicable
                         channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
-                        hidden_msg = await channel.fetch_message(submission.hidden_id)
-                        if hidden_msg:
-                            await hidden_msg.delete()
-
+                        try:
+                            hidden_msg = await channel.fetch_message(submission.hidden_id)
+                            if hidden_msg:
+                                await hidden_msg.delete()
+                        except:
+                            pass
                         await msg.edit(content=f'```\n{pt}```\nSubmission accepted')
 
                         # Update submission

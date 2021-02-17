@@ -37,8 +37,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
     # view scoreboard
     @commands.command(
-        help=("View top 10 verified/unverified records for a particular level on a map. "
-              "Links to original posts are included"),
+        help="View top 10 verified/unverified records for a particular level on a map.",
         brief="View top 10 verified/unverified records",
         aliases=["sb"],
     )
@@ -61,8 +60,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
     # view leaderboard
     @commands.command(
-        help=("View top 10 verified records for a particular level on a map. "
-              "Links to original posts are included"),
+        help="View top 10 verified records for a particular level on a map.",
         brief="View top 10 records",
         aliases=["lb"],
     )

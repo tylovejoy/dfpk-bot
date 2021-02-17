@@ -38,22 +38,24 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         if record_in_seconds:
             map_code = map_code.upper()
             which_place = False
-            submission, search = None, None
-            # main
+            submission = None
+            # New DB entry for PB
             if await WorldRecords.count_documents(
                     {"code": map_code, "level": level, "posted_by": ctx.author.id}) == 0:
                 submission = WorldRecords(
                     **dict(code=map_code, name=ctx.author.name,
-                                    record=record_in_seconds, level=level,
-                                    posted_by=ctx.author.id,
-                                    message_id=ctx.message.id,
-                                    url=ctx.message.jump_url,
-                                    verified=False))
+                           record=record_in_seconds, level=level,
+                           posted_by=ctx.author.id,
+                           message_id=ctx.message.id,
+                           url=ctx.message.jump_url,
+                           verified=False))
 
-                pt = prettytable.PrettyTable()
-                pt.field_names = ["Map Code", "Level", "Record", "Name"]
+                pt = prettytable.PrettyTable(
+                    field_names=["Map Code", "Level", "Record", "Name"]
+                )
                 pt.add_row([submission.code, submission.level,
                             utilities.display_record(record_in_seconds), submission.name])
+
                 msg = await ctx.send(f"```\nIs this correct?\n{pt}```")
                 confirmed = await confirmation.confirm(ctx, msg)
 
@@ -75,13 +77,16 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     await msg.edit(
                         content=f'Submission timed out! Submission has not been accepted.')
 
+            # If there is already a personal best in DB
             elif await WorldRecords.count_documents(
                     {"code": map_code, "level": level, "posted_by": ctx.author.id}) == 1:
                 submission = await WorldRecords.find_one(
                     {"code": map_code, "level": level, "posted_by": ctx.author.id})
+                # If new record is faster than old record
                 if record_in_seconds < submission.record:
-                    pt = prettytable.PrettyTable()
-                    pt.field_names = ["Map Code", "Level", "Record", "Name"]
+                    pt = prettytable.PrettyTable(
+                        field_names=["Map Code", "Level", "Record", "Name"]
+                    )
                     pt.add_row([submission.code, submission.level,
                                 utilities.display_record(record_in_seconds),
                                 submission.name])
@@ -89,15 +94,22 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     confirmed = await confirmation.confirm(ctx, msg)
 
                     if confirmed is True:
+                        # Delete standing hidden channel post, if applicable
+                        channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
+                        hidden_msg = await channel.fetch_message(submission.hidden_id)
+                        if hidden_msg:
+                            await hidden_msg.delete()
+
                         await msg.edit(content=f'```\n{pt}```\nSubmission accepted')
+
+                        # Update submission
                         submission.record = record_in_seconds
                         submission.message_id = ctx.message.id
                         submission.url = ctx.message.jump_url
                         submission.name = ctx.author.name
                         submission.verified = False
 
-                        channel = self.bot.get_channel(
-                            constants.HIDDEN_VERIFICATION_CHANNEL)
+                        # New hidden message
                         hidden_msg = await channel.send(
                             f"{submission.name} - {submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}")
                         submission.hidden_id = hidden_msg.id
@@ -130,7 +142,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
     # Delete pb
     @commands.command(
-        help="Delete personal best record for a particular map code.\n<name> will default to your own. This is only required for when a mod deletes another person's personal best.",
+        help="Delete personal best record for a particular map code.\n<name> will default to your own.\nThis is only required for when a mod deletes another person's personal best.\nOnly original posters and mods can delete a personal best.",
         brief="Delete personal best record",
     )
     async def deletepb(self, ctx, map_code, level, name=""):

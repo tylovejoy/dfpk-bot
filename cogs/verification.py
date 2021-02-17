@@ -30,7 +30,6 @@ class Verification(commands.Cog, name="Verification"):
                     guild = self.bot.get_guild(payload.guild_id)
                     channel = guild.get_channel(payload.channel_id)
                     msg = await channel.fetch_message(payload.message_id)
-
                     hidden_channel = guild.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
                     hidden_msg = await hidden_channel.fetch_message(search.hidden_id)
                     await hidden_msg.delete()

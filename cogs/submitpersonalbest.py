@@ -20,11 +20,11 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
     # Submit personal best records
     @commands.command(
         help=(
-                "Submit personal bests. Upload a screenshot with this message for proof!\n"  # noqa: E501
-                "There will be a link in the world record leaderboards to the original post.\n"  # noqa: E501
+                "Submit personal bests. Upload a screenshot with this message for proof!\n" 
+                "There will be a link to the original post when using the `/pb` command.\n" 
                 "Also updates a personal best if it is faster.\n\n"
-                "<record> must be in SECONDS.\n"
-                "Use the /converttime command to easily convert your time to seconds."),
+                "<record> must be in HH:MM:SS.SS format! You can omit the hours or minutes.\n"
+        ),
         brief="Submit personal best",
     )
     async def submitpb(self, ctx, map_code, level, record):

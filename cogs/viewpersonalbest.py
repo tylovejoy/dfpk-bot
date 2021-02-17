@@ -18,7 +18,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             return True
 
     @commands.command(
-        help="View personal best record for a particular map code.\n [name] is optional. Defaults to the user who used the command.\nUse [name] to find personal best of other users.",
+        help="View personal best record for a particular map code.\n[name] is optional. Defaults to the user who used the command.\nUse [name] to find personal best of other users.",
         brief="View personal best record",
     )
     async def pb(self, ctx, map_code, level, name=""):
@@ -27,9 +27,10 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         map_code = map_code.upper()
         if await WorldRecords.count_documents({"code": map_code, "name": name, "level": level}) == 1:
             search = await WorldRecords.find_one({"code": map_code, "name": name, "level": level})
-
+            pt = prettytable.PrettyTable(field_names=["Level", "Record", "Name", "Verified"])
+            pt.add_row([search.level, utilities.display_record(search.record), search.name, constants.VERIFIED_EMOJI if search.verified is True else constants.NOT_VERIFIED_EMOJI])
             await ctx.channel.send(
-                f"{name}'s personal best for {map_code} Level {level}: {utilities.display_record(search['record'])} {constants.VERIFIED_EMOJI if search['verified'] is True else constants.NOT_VERIFIED_EMOJI} - {search['message_id']}"  # noqa: E501
+                f"```\n{pt}```\n{search.url}"  # noqa: E501
             )
         else:
             await ctx.channel.send("Personal best doesn't exist.")
@@ -95,6 +96,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         map_code = map_code.upper()
         pt = prettytable.PrettyTable()
         post = 0
+        url = ''
         if level == "":
             title = f"CODE: {map_code} - VERIFIED WORLD RECORDS:\n"
             level_checker = set()
@@ -118,8 +120,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 post = 1
                 pt.field_names = ["Record", "Name", "Verified"]
                 pt.add_row([utilities.display_record(entry.record), entry.name, constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI])
+                url = entry.url
         if post:
-            await ctx.send(f"{title}```\n{pt}```")
+            await ctx.send(f"{title}```\n{pt}```\n{url}")
         else:
             await ctx.send(f"No world record for {map_code}{' level ' + level if level else ''}!")
 

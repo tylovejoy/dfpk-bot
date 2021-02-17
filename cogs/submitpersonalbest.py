@@ -106,24 +106,25 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                                 await hidden_msg.delete()
                         except:
                             pass
-                        await msg.edit(content=f'```\n{pt}```\nSubmission accepted')
+                        finally:
+                            await msg.edit(content=f'```\n{pt}```\nSubmission accepted')
 
-                        # Update submission
-                        submission.record = record_in_seconds
-                        submission.message_id = ctx.message.id
-                        submission.url = ctx.message.jump_url
-                        submission.name = ctx.author.name
-                        submission.verified = False
+                            # Update submission
+                            submission.record = record_in_seconds
+                            submission.message_id = ctx.message.id
+                            submission.url = ctx.message.jump_url
+                            submission.name = ctx.author.name
+                            submission.verified = False
 
-                        # New hidden message
-                        hidden_msg = await channel.send(
-                            f"{submission.name} - {submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}")
-                        submission.hidden_id = hidden_msg.id
-                        await submission.commit()
+                            # New hidden message
+                            hidden_msg = await channel.send(
+                                f"{submission.name} - {submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}")
+                            submission.hidden_id = hidden_msg.id
+                            await submission.commit()
 
-                        await ctx.message.add_reaction(constants.VERIFIED_EMOJI)
-                        await ctx.message.add_reaction(constants.NOT_VERIFIED_EMOJI)
-                        which_place = True
+                            await ctx.message.add_reaction(constants.VERIFIED_EMOJI)
+                            await ctx.message.add_reaction(constants.NOT_VERIFIED_EMOJI)
+                            which_place = True
                     elif confirmed is False:
                         await msg.edit(content=f'Submission has not been accepted.')
                     elif confirmed is None:

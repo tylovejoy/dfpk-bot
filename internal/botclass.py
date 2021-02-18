@@ -74,6 +74,6 @@ class Bot(commands.Bot):
         If you wish to have multiple event listeners they can be added in other cogs. All on_message listeners should
         always ignore bots.
         """
-        if message.author.bot:
-            return  # ignore all bots
+        # if message.author.bot:
+        #     return  # ignore all bots
         await self.process_commands(message)

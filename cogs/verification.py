@@ -40,7 +40,7 @@ class Verification(commands.Cog, name="Verification"):
                 elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
                     search.verified = False
                     await search.commit()
-                    await msg.author.send(f'{payload.member.name} has denied verification for your submission! {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}')
+                    await msg.author.send(f'{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}')
 
                 await msg.clear_reactions()
 

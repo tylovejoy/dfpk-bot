@@ -65,8 +65,6 @@ async def run():
 
     bot.config = config
 
-    from distest.patches import patch_target
-    bot = patch_target(bot)
 
     try:
         # Start the keepalive endpoint

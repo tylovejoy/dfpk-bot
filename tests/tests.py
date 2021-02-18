@@ -19,7 +19,7 @@ created_channel = None
 
 @test_collector()
 async def test_submitpb(interface):
-    await interface.assert_reply_equals("/submitpb 1 1", "")
+    await interface.assert_reply_equals("/submitpb", "You are missing a required argument! (See /help submitpb for info on how to use this command).")
 
 
 

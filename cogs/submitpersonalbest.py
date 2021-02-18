@@ -20,8 +20,8 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
     # Submit personal best records
     @commands.command(
         help=(
-                "Submit personal bests. Upload a screenshot with this message for proof!\n" 
-                "There will be a link to the original post when using the `/pb` command.\n" 
+                "Submit personal bests. Upload a screenshot with this message for proof!\n"
+                "There will be a link to the original post when using the `/pb` command.\n"
                 "Also updates a personal best if it is faster.\n\n"
                 "<record> must be in HH:MM:SS.SS format! You can omit the hours or minutes.\n"
         ),
@@ -99,7 +99,8 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
                     if confirmed is True:
                         # Delete standing hidden channel post, if applicable
-                        channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
+                        channel = self.bot.get_channel(
+                            constants.HIDDEN_VERIFICATION_CHANNEL)
                         try:
                             hidden_msg = await channel.fetch_message(submission.hidden_id)
                             if hidden_msg:

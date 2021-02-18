@@ -1,12 +1,9 @@
 import discord
 from discord.ext import commands
 import asyncio
-from internal import constants, utilities, confirmation
+from internal import constants, utilities
 from database.WorldRecords import WorldRecords
-from mongosanitizer.sanitizer import sanitize
 import prettytable
-import datetime
-import logging
 
 
 class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):

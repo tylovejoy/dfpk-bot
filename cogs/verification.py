@@ -50,10 +50,15 @@ class Verification(commands.Cog, name="Verification"):
             search = await WorldRecords.find_one({"message_id": payload.message_id})
             if search is not None:
                 channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
-                hidden_msg = await channel.fetch_message(search.hidden_id)
-                if hidden_msg:
-                    await hidden_msg.delete()
-                await search.delete()
+                try:
+                    hidden_msg = await channel.fetch_message(search.hidden_id)
+                    if hidden_msg:
+                        await hidden_msg.delete()
+                except:
+                    pass
+                finally:
+
+                    await search.delete()
 
 
 def setup(bot):

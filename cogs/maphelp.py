@@ -8,7 +8,10 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        if ctx.channel.id == constants.MAP_CHANNEL_ID or ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID:
+        if (
+            ctx.channel.id == constants.MAP_CHANNEL_ID
+            or ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID
+        ):
             return True
 
     """
@@ -22,7 +25,7 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
     async def maps(self, ctx):
         post = ""
         for maps in constants.ALL_MAP_NAMES:
-            post += ' | '.join(maps) + '\n'
+            post += " | ".join(maps) + "\n"
         await ctx.send(f"```Acceptable map names:\n{post}```")
 
     @commands.command(

@@ -21,7 +21,11 @@ class Verification(commands.Cog, name="Verification"):
     async def on_raw_reaction_add(self, payload=None):
         if payload.user_id == constants.BOT_ID:
             return
-        if not (True if any(role.id in constants.ROLE_WHITELIST for role in payload.member.roles) else False):
+        if not (
+            True
+            if any(role.id in constants.ROLE_WHITELIST for role in payload.member.roles)
+            else False
+        ):
             return
         if payload is not None:
             search = await WorldRecords.find_one({"message_id": payload.message_id})
@@ -29,18 +33,24 @@ class Verification(commands.Cog, name="Verification"):
                 guild = self.bot.get_guild(payload.guild_id)
                 channel = guild.get_channel(payload.channel_id)
                 msg = await channel.fetch_message(payload.message_id)
-                hidden_channel = guild.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
+                hidden_channel = guild.get_channel(
+                    constants.HIDDEN_VERIFICATION_CHANNEL
+                )
                 hidden_msg = await hidden_channel.fetch_message(search.hidden_id)
                 await hidden_msg.delete()
                 if str(payload.emoji) == constants.VERIFIED_EMOJI:
                     search.verified = True
                     await search.commit()
-                    await msg.author.send(f'Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}')
+                    await msg.author.send(
+                        f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
+                    )
 
                 elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
                     search.verified = False
                     await search.commit()
-                    await msg.author.send(f'{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}')
+                    await msg.author.send(
+                        f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
+                    )
 
                 await msg.clear_reactions()
 

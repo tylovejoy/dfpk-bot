@@ -63,7 +63,7 @@ class ErrorHandler(commands.Cog):
         commands.DisabledCommand: "This command is disabled and cannot be used",
         commands.CheckFailure: "This command cannot be used here or you have insufficient permissions",
         commands.CommandOnCooldown: "{err}",
-        commands.MissingRequiredArgument: "You are missing a required argument! (See `{ctx.prefix}help {ctx.command.qualified_name}` for info on how to use this command).",
+        commands.MissingRequiredArgument: "You are missing a required argument!{err.param} (See `{ctx.prefix}help {ctx.command.qualified_name}` for info on how to use this command).",
         commands.BadArgument: "Invalid argument given! (See `{ctx.prefix}help {ctx.command.qualified_name}` for info on how to use this command).",
         commands.CommandNotFound: None,
     }

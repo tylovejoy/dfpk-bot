@@ -16,6 +16,7 @@ TYPES_OF_MAP = [
     "MILDCORE",
     "OUT-OF-MAP",
     "ABLOCK",
+    "NOSTALGIA"
 ]
 
 ROLE_WHITELIST = [
@@ -25,7 +26,7 @@ ROLE_WHITELIST = [
     808426677562114122,  # LIVE - Record Org
     195542852518805504,  # TEST - Mod
     801645674617634886,  # TEST - Tester
-]  # DELETE LAST 2 IDs!!!!!!!!!
+]
 
 MAP_CHANNEL_ID = 802362144506511400  # 795399258966458459
 RECORD_CHANNEL_ID = 801496775390527548  # 693673770086301737
@@ -33,13 +34,14 @@ MAP_SUBMIT_CHANNEL_ID = 802624308726726707  # 689621322862559413
 HIDDEN_VERIFICATION_CHANNEL = 811467249100652586  # ?
 
 #
+
 GUILD_ID = 195387617972322306
 
 BOT_ID = 808340225460928552
 
-VERIFICATION_GUILD_COUNT_TRESHOLD = (
-    75  # The amount of servers required for a bot to be eligible for verification.
-)
+# The amount of servers required for a bot to be eligible for verification.
+VERIFICATION_GUILD_COUNT_TRESHOLD = 75
+
 BAD_BOT_PERCENTAGE_TRESHOLD = 35  # The % of bot accounts in a server in order for the server to be considered low quality
 
 CONFIRM_REACTION_EMOJI = "🟢"  # Reaction emoji used to confirm actions

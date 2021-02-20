@@ -137,7 +137,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             async for entry in (
                 WorldRecords.find({"code": map_code, "verified": True})
                 .sort("record", 1)
-                .limit(20)
+                .limit(30)
             ):
                 if entry.level not in level_checker:
                     post = 1
@@ -177,6 +177,28 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             await ctx.send(
                 f"No world record for {map_code}{' level ' + level if level else ''}!"
             )
+
+    # view levels associated with PBs in a map code
+    @commands.command(
+        help="Lists level names that are currently associated with <map_code>.",
+        brief="Lists level names that are currently associated with <map_code>",
+        aliases=["levelnames"],
+    )
+    async def levels(self, ctx, map_code):
+        map_code = map_code.upper()
+        title = f"CODE: {map_code} - LEVEL NAMES:\n"
+        level_checker = set()
+        async for entry in (
+            WorldRecords.find({"code": map_code})
+            .sort("record", 1)
+            .limit(30)
+        ):
+            if entry.level not in level_checker:
+                level_checker.add(entry.level)
+        if level_checker:
+            await ctx.send(f"{title}\n```" + ", ".join(level_checker) + "```")
+        else:
+            await ctx.send(f"No level names found for {map_code}!")
 
 
 def setup(bot):

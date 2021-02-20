@@ -96,7 +96,9 @@ class MapSearch(commands.Cog, name="Map Search"):
             field_names=["Map Code", "Map Type", "Map Name", "Description", "Creator"]
         )
         count = await MapData.count_documents()
-        async for entry in MapData.find().skip(count - constants.NEWEST_MAPS_LIMIT):
+        async for entry in MapData.find(
+                {"map_type": {"$nin": ["NOSTALGIA"]}}
+        ).skip(count - constants.NEWEST_MAPS_LIMIT):
             pt.add_row(
                 [
                     entry.code,

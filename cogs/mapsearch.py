@@ -83,6 +83,49 @@ class MapSearch(commands.Cog, name="Map Search"):
                 # ending the loop if user doesn't react after x seconds
 
     """
+    Newest maps
+    """
+    @commands.command(
+        help="Lists most recent submitted maps",
+        brief="",
+        aliases=["new", "latest"]
+    )
+    async def newest(self, ctx):
+        row = 0
+        pt = prettytable.PrettyTable(
+            field_names=["Map Code", "Map Type", "Map Name", "Description", "Creator"]
+        )
+        count = await MapData.count_documents()
+        async for entry in MapData.find().skip(count - constants.NEWEST_MAPS_LIMIT):
+            pt.add_row(
+                [
+                    entry.code,
+                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
+                    constants.PRETTY_NAMES[entry.map_name],
+                    fill(entry.desc, constants.DESC_MAX_LENGTH),
+                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
+                ]
+            )
+            row += 1
+        if row:
+            if ceil(row / constants.PT_PAGE_SIZE) != 1:
+                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
+                while s < row:
+                    split_pt.append(pt.get_string(start=s, end=e))
+                    s += constants.PT_PAGE_SIZE
+                    e += constants.PT_PAGE_SIZE
+                await self.pages(
+                    ctx,
+                    split_pt,
+                    ceil(row / constants.PT_PAGE_SIZE),
+                    "Latest Maps",
+                )
+            else:
+                await ctx.send(f"Latest Maps```Page 1/1:\n{pt}```")
+        else:
+            await ctx.send(f"No latest maps!")
+
+    """
     Creator search
     """
 

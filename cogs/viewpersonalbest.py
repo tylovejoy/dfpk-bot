@@ -196,7 +196,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             if entry.level not in level_checker:
                 level_checker.add(entry.level)
         if level_checker:
-            await ctx.send(f"{title}\n```" + ", ".join(level_checker) + "```")
+            await ctx.send(f"{title}```" + ", ".join(level_checker) + "```")
         else:
             await ctx.send(f"No level names found for {map_code}!")
 

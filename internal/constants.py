@@ -4,10 +4,29 @@ If you wish to add or edit a constant, please make sure to comment the meaning o
 """
 # Customize the following
 
-TYPES_OF_MAP = ["SINGLE", "MULTI", "PIO", "TIME-ATTACK", "MEGAMAP", "MULTIMAP",
-                "TUTORIAL", "HARDCORE", "MILDCORE", "OUT-OF-MAP", "ABLOCK"]
-#                |      Admin       |        Mod        |     Tourny Org    |    Record Org     |
-ROLE_WHITELIST = [699145313520320542, 725198459627634689, 758399333942558800, 808426677562114122, 195542852518805504, 801645674617634886]  # DELETE LAST 2 IDs!!!!!!!!!
+TYPES_OF_MAP = [
+    "SINGLE",
+    "MULTI",
+    "PIO",
+    "TIME-ATTACK",
+    "MEGAMAP",
+    "MULTIMAP",
+    "TUTORIAL",
+    "HARDCORE",
+    "MILDCORE",
+    "OUT-OF-MAP",
+    "ABLOCK",
+    "NOSTALGIA"
+]
+
+ROLE_WHITELIST = [
+    699145313520320542,  # LIVE - Admin
+    725198459627634689,  # LIVE - Mod
+    758399333942558800,  # LIVE - Tourny Org
+    808426677562114122,  # LIVE - Record Org
+    195542852518805504,  # TEST - Mod
+    801645674617634886,  # TEST - Tester
+]
 
 MAP_CHANNEL_ID = 802362144506511400  # 795399258966458459
 RECORD_CHANNEL_ID = 801496775390527548  # 693673770086301737
@@ -15,33 +34,36 @@ MAP_SUBMIT_CHANNEL_ID = 802624308726726707  # 689621322862559413
 HIDDEN_VERIFICATION_CHANNEL = 811467249100652586  # ?
 
 #
+
 GUILD_ID = 195387617972322306
 
 BOT_ID = 808340225460928552
 
-VERIFICATION_GUILD_COUNT_TRESHOLD = 75  # The amount of servers required for a bot to be eligible for verification.
+# The amount of servers required for a bot to be eligible for verification.
+VERIFICATION_GUILD_COUNT_TRESHOLD = 75
+
 BAD_BOT_PERCENTAGE_TRESHOLD = 35  # The % of bot accounts in a server in order for the server to be considered low quality
 
-CONFIRM_REACTION_EMOJI = '🟢'  # Reaction emoji used to confirm actions
-CANCEL_REACTION_EMOJI = '🟥'  # Reaction emoji used to cancel actions
+CONFIRM_REACTION_EMOJI = "🟢"  # Reaction emoji used to confirm actions
+CANCEL_REACTION_EMOJI = "🟥"  # Reaction emoji used to cancel actions
 
-CONFIRMATION_TEXT = f'*Please react to this message with {CONFIRM_REACTION_EMOJI} to continue, or react with {CANCEL_REACTION_EMOJI} to cancel. Waiting for two minutes will cancel the process automatically.*'  # Message sent at the bottom of every reaction confirmaation
+CONFIRMATION_TEXT = f"*Please react to this message with {CONFIRM_REACTION_EMOJI} to continue, or react with {CANCEL_REACTION_EMOJI} to cancel. Waiting for two minutes will cancel the process automatically.*"  # Message sent at the bottom of every reaction confirmaation
 
-LEFT_REACTION_EMOJI = '◀'  # Reaction emoji used to turn page left
-RIGHT_REACTION_EMOJI = '▶'  # Reaction emoji used to turn page left
+LEFT_REACTION_EMOJI = "◀"  # Reaction emoji used to turn page left
+RIGHT_REACTION_EMOJI = "▶"  # Reaction emoji used to turn page left
 
-NEW_LINE = '\n'
+NEW_LINE = "\n"
 
 # Verification
-VERIFIED_EMOJI = '✅'
-NOT_VERIFIED_EMOJI = '❌'
+VERIFIED_EMOJI = "✅"
+NOT_VERIFIED_EMOJI = "❌"
 
 # Prettytable page size
 PT_PAGE_SIZE = 10
 
 # creator / desc max_lengths
-CREATOR_MAX_LENGTH = 60
-DESC_MAX_LENGTH = 60
+CREATOR_MAX_LENGTH = 35
+DESC_MAX_LENGTH = 35
 TYPE_MAX_LENGTH = 20
 
 
@@ -118,42 +140,42 @@ ALL_MAP_NAMES = [
     WORKSHOPCHAMBER,
     WORKSHOPEXPANSE,
     WORKSHOPGREENSCREEN,
-    WORKSHOPISLAND
+    WORKSHOPISLAND,
 ]
 
 PRETTY_NAMES = {
-    'ayutthaya': 'Ayutthaya',
-    'blackforest': 'Black Forest',
-    'blizzardworld': 'Blizzard World',
-    'busan': 'Busan',
-    'castillo': 'Castillo',
-    'chateauguillard': 'Chateau Guillard',
-    'dorado': 'Dorado',
-    'eichenwalde': 'Eichenwalde',
-    'hanamura': 'Hanamura',
-    'havana': 'Havana',
-    'hollywood': 'Hollywood',
-    'horizonlunarcolony': 'Horizon Lunar Colony',
-    'ilios': 'Ilios',
-    'junkertown': 'Junkertown',
-    'lijiangtower': 'Lijiang Tower',
-    'necropolis': 'Necropolis',
-    'nepal': 'Nepal',
-    'numbani': 'Numbani',
-    'oasis': 'Oasis',
-    'paris': 'Paris',
-    'rialto': 'Rialto',
-    'route66': 'Route 66',
-    'templeofanubis': 'Temple of Anubis',
-    'volskayaindustries': 'Volskaya Industries',
-    'watchpointgibraltar': 'Watchpoint Gibraltar',
-    'kingsrow': "King's Row",
-    'petra': 'Petra',
-    'ecopointantarctica': 'Ecopoint Antarctica',
-    'kanezaka': 'Kanezaka',
-    'workshopchamber': 'Workshop Chamber',
-    'workshopexpanse': 'Workshop Expanse',
-    'workshopgreenscreen': 'Workshop Greenscreen',
-    'workshopisland': 'Workshop Island',
-    'practicerange': 'Practice Range',
+    "ayutthaya": "Ayutthaya",
+    "blackforest": "Black Forest",
+    "blizzardworld": "Blizzard World",
+    "busan": "Busan",
+    "castillo": "Castillo",
+    "chateauguillard": "Chateau Guillard",
+    "dorado": "Dorado",
+    "eichenwalde": "Eichenwalde",
+    "hanamura": "Hanamura",
+    "havana": "Havana",
+    "hollywood": "Hollywood",
+    "horizonlunarcolony": "Horizon Lunar Colony",
+    "ilios": "Ilios",
+    "junkertown": "Junkertown",
+    "lijiangtower": "Lijiang Tower",
+    "necropolis": "Necropolis",
+    "nepal": "Nepal",
+    "numbani": "Numbani",
+    "oasis": "Oasis",
+    "paris": "Paris",
+    "rialto": "Rialto",
+    "route66": "Route 66",
+    "templeofanubis": "Temple of Anubis",
+    "volskayaindustries": "Volskaya Industries",
+    "watchpointgibraltar": "Watchpoint Gibraltar",
+    "kingsrow": "King's Row",
+    "petra": "Petra",
+    "ecopointantarctica": "Ecopoint Antarctica",
+    "kanezaka": "Kanezaka",
+    "workshopchamber": "Workshop Chamber",
+    "workshopexpanse": "Workshop Expanse",
+    "workshopgreenscreen": "Workshop Greenscreen",
+    "workshopisland": "Workshop Island",
+    "practicerange": "Practice Range",
 }

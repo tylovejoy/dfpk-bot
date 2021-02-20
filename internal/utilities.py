@@ -2,6 +2,7 @@ import datetime
 import re
 import prettytable
 
+
 def split_posts(post):
     groups = post.split("\n")
     split_groups = []
@@ -38,17 +39,19 @@ def date_func(s):
 
 
 def time_convert(time_input):
-    time_list = time_input.split(':')
+    time_list = time_input.split(":")
     if len(time_list) == 1:
         return float(time_list[0])
     elif len(time_list) == 2:
         return float((int(time_list[0]) * 60) + float(time_list[1]))
     elif len(time_list) == 3:
-        return float((int(time_list[0]) * 3600) + (int(time_list[1]) * 60) + float(time_list[2]))
+        return float(
+            (int(time_list[0]) * 3600) + (int(time_list[1]) * 60) + float(time_list[2])
+        )
 
 
 def display_record(record):
-    if str(datetime.timedelta(seconds=record)).count('.') == 1:
-        return str(datetime.timedelta(seconds=record))[:-4 or None]
+    if str(datetime.timedelta(seconds=record)).count(".") == 1:
+        return str(datetime.timedelta(seconds=record))[: -4 or None]
     else:
-        return str(datetime.timedelta(seconds=record)) + '.00'
+        return str(datetime.timedelta(seconds=record)) + ".00"

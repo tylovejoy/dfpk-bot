@@ -3,6 +3,7 @@ from discord import Intents
 
 class InvalidFlagException(Exception):
     """An exception thrown when an invalid intent flag is passed"""
+
     pass
 
 
@@ -19,13 +20,13 @@ def calculate_intents(raw):
     intents = Intents()
     intslist = []
 
-    if raw is None or raw == 'none' or 'none' in raw:
+    if raw is None or raw == "none" or "none" in raw:
         intents = Intents.none()
 
-    if raw == 'default' or 'default' in raw:
+    if raw == "default" or "default" in raw:
         intents = Intents.default()
 
-    if raw == 'all' or 'all' in raw:
+    if raw == "all" or "all" in raw:
         intents = Intents.all()
 
     if isinstance(raw, str):
@@ -40,11 +41,11 @@ def calculate_intents(raw):
         intslist += raw
 
     for intent in intslist:
-        if intent.lower() in ('all', 'none', 'default'):
+        if intent.lower() in ("all", "none", "default"):
             continue
 
         if intent.lower() not in Intents.VALID_FLAGS:
-            raise InvalidFlagException('Invalid intent flag passed')
+            raise InvalidFlagException("Invalid intent flag passed")
 
         setattr(intents, intent.lower(), True)
 

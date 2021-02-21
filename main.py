@@ -9,8 +9,8 @@ from discord.ext import commands
 
 from internal.botclass import Bot
 from internal.intentcalculator import calculate_intents
-import aiohttp
-from aiohttp import web
+#from internal.keepalive import keep_alive
+
 
 def load_config():
     from os.path import join, dirname
@@ -75,15 +75,19 @@ async def run():
     bot.config = config
 
     try:
-        token = get_config_var("BOT_TOKEN", config, "token", error=True)
+        # Start the keepalive endpoint
+        #if os.getenv('KEEP_ALIVE'):
+        #   keep_alive()
+
+        token = get_config_var('BOT_TOKEN', config, 'token', error=True)
         await bot.start(token)
     except KeyboardInterrupt:
         await bot.logout()
         exit()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    print("Start bot...")
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run())

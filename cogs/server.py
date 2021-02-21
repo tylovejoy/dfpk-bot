@@ -5,9 +5,6 @@ from discord.ext import commands
 import aiohttp
 
 
-
-
-
 class WebServer(commands.Cog):
 
     def __init__(self, bot):
@@ -15,9 +12,6 @@ class WebServer(commands.Cog):
         self.site = None
 
     async def webserver(self):
-        async def handler(request):
-            return web.Response(text="DFPK Bot")
-
         routes = web.RouteTableDef()
 
         @routes.post('/test')
@@ -72,6 +66,8 @@ class WebServer(commands.Cog):
 
             return web.Response(text='Testing...')
 
+        async def handler(request):
+            return web.Response(text="DFPK Bot")
         app = web.Application()
         app.router.add_get('/', handler)
         runner = web.AppRunner(app)

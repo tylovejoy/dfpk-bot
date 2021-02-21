@@ -82,13 +82,8 @@ async def run():
         exit()
 
 
-
-
-
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    print('Start bot...')
+    print("Start bot...")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run())

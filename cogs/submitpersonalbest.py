@@ -87,7 +87,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     ]
                 )
 
-                msg = await ctx.send("```\n" + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
+                msg = await ctx.send("```\nCurrently submitted level names for {map_code}: " + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
                 confirmed = await confirmation.confirm(ctx, msg)
 
                 if confirmed is True:
@@ -135,7 +135,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                             submission.name,
                         ]
                     )
-                    msg = await ctx.send("```\n" + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
+                    msg = await ctx.send(f"```\nCurrently submitted level names for {map_code}: " + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
                     confirmed = await confirmation.confirm(ctx, msg)
 
                     if confirmed is True:

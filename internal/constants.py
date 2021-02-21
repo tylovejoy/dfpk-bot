@@ -67,7 +67,7 @@ DESC_MAX_LENGTH = 35
 TYPE_MAX_LENGTH = 20
 
 # limit for latest maps command
-NEWEST_MAPS_LIMIT = 10
+NEWEST_MAPS_LIMIT = 7
 
 # Map names | CUSTOMIZE ACCEPTABLE NAMES
 AYUTTHAYA = ["ayutthaya", "ayutt"]

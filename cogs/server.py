@@ -72,7 +72,7 @@ class WebServer(commands.Cog):
         app.router.add_get('/', handler)
         runner = web.AppRunner(app)
         await runner.setup()
-        self.site = web.TCPSite(runner, '127.0.0.1', 8000)
+        self.site = web.TCPSite(runner, '127.0.0.1', 8080)
         await self.bot.wait_until_ready()
         await self.site.start()
 

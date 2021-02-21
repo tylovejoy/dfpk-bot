@@ -23,7 +23,9 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             "Submit personal bests. Upload a screenshot with this message for proof!\n"
             "There will be a link to the original post when using the `/pb` command.\n"
             "Also updates a personal best if it is faster.\n\n"
-            "<record> must be in HH:MM:SS.SS format! You can omit the hours or minutes.\n"
+            "<record> must be in HH:MM:SS.SS format! You can omit the hours or minutes.\n\n"
+            "Use quotation marks around level names that have spaces.\n\n"
+            "A list of previously submitted level names will appear on confirmation message."
         ),
         brief="Submit personal best",
     )

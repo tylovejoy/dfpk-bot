@@ -13,8 +13,8 @@ discord-pretty-help
 distest
 dnspython
 easydict==1.9
-Flask==1.1.2
-gevent==20.9.0
+Flask
+gevent
 greenlet==0.4.17
 humanize==3.0.1
 idna==2.10
@@ -28,7 +28,7 @@ MarkupSafe==1.1.1
 marshmallow==3.8.0
 mccabe==0.6.1
 mongosanitizer
-motor==2.3.0
+motor
 multidict
 prettytable
 pycparser==2.20
@@ -40,7 +40,7 @@ requirements-detector==0.7
 six==1.15.0
 toml==0.10.2
 tornado==6.0.4
-umongo==3.0.0b10
+umongo
 vermin==0.10.5
 websockets==8.1
 Werkzeug==1.0.1
@@ -48,3 +48,7 @@ wrapt==1.12.1
 yarl
 zope.event==4.5.0
 zope.interface==5.1.2
+
+fastapi
+
+uvicorn

@@ -45,7 +45,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         record_in_seconds = utilities.time_convert(record)
         level_checker = set()
         async for entry in (
-            WorldRecords.find({"code": map_code})
+            WorldRecords.find({"code": map_code.upper()})
             .sort("record", 1)
             .limit(30)
         ):
@@ -87,7 +87,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     ]
                 )
 
-                msg = await ctx.send("```" + ", ".join(level_checker) + "```" + f"```\nIs this correct?\n{pt}```")
+                msg = await ctx.send("```\n" + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
                 confirmed = await confirmation.confirm(ctx, msg)
 
                 if confirmed is True:
@@ -135,7 +135,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                             submission.name,
                         ]
                     )
-                    msg = await ctx.send("```" + ", ".join(level_checker) + "```" + f"```\nIs this correct?\n{pt}```")
+                    msg = await ctx.send("```\n" + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
                     confirmed = await confirmation.confirm(ctx, msg)
 
                     if confirmed is True:

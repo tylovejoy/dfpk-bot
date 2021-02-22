@@ -1,11 +1,17 @@
 import discord
 from discord.ext import commands
 import asyncio
-from internal import constants, utilities, confirmation
+from internal import confirmation
 from database.MapData import MapData
 from mongosanitizer.sanitizer import sanitize
 import prettytable
 from textwrap import fill
+import sys
+if len(sys.argv) > 1:
+    if sys.argv[1] == "test":
+        from internal import test_constants as constants
+else:
+    from internal import constants
 
 
 def map_name_converter(map_name):

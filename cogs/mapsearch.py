@@ -1,12 +1,18 @@
 import discord
 from discord.ext import commands
 import asyncio
-from internal import constants, utilities
+import sys
 from database.MapData import MapData
 import re
 import prettytable
 from math import ceil
-from textwrap import fill, wrap
+from textwrap import fill
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == "test":
+        from internal import test_constants as constants
+else:
+    from internal import constants
 
 
 class MapSearch(commands.Cog, name="Map Search"):
@@ -17,11 +23,52 @@ class MapSearch(commands.Cog, name="Map Search"):
         if ctx.channel.id == constants.MAP_CHANNEL_ID:
             return True
 
-    #@commands.command(hidden=True)
+    async def searchmap(self, ctx, query: dict, map_type="", map_name="", creator="", map_code=""):
+        # Checks for map_type, if exists
+        if map_type:
+            map_type = map_type.upper()
+            if map_type not in constants.TYPES_OF_MAP:
+                await ctx.send(
+                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
+                )
+                return
+
+        row, page, embeds = 0, 1, []
+
+        embed = discord.Embed(title=map_name if map_name else creator if creator else map_code + f" Page {page}")
+        count = await MapData.count_documents(query)
+
+        async for entry in MapData.find(query):
+
+            if row != 0 and (row % 10 == 0 or count - 1 == row):
+                embed.add_field(
+                    name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
+                    value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
+                    inline=False)
+                page += 1
+                embeds.append(embed)
+                embed = discord.Embed(title=map_name if map_name else creator if creator else map_code + f" Page {page}")
+
+            elif row % 10 != 0 or row == 0:
+                embed.add_field(
+                    name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
+                    value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
+                    inline=False)
+
+            if count == 1:
+                embeds.append(embed)
+            row += 1
+
+        if row:
+            await self.pages(ctx, contents=embeds, total_pages=len(embeds),
+                             map_name=map_name if map_name else creator if creator else map_code)
+        else:
+            await ctx.send(f"Nothing exists for {map_name if map_name else creator if creator else map_code}!")
+
     async def pages(self, ctx, contents, total_pages, map_name):
         cur_page = 1
         message = await ctx.send(
-            f"{map_name}\n```Page {cur_page}/{total_pages}:\n{contents[cur_page - 1]}```"
+            embed=contents[cur_page - 1]
         )
         # getting the message object for editing and reacting
 
@@ -44,22 +91,22 @@ class MapSearch(commands.Cog, name="Map Search"):
                 # example
 
                 if (
-                    str(reaction.emoji) == constants.RIGHT_REACTION_EMOJI
-                    and cur_page != total_pages
+                        str(reaction.emoji) == constants.RIGHT_REACTION_EMOJI
+                        and cur_page != total_pages
                 ):
                     cur_page += 1
                     await message.edit(
-                        content=f"{map_name}\n```Page {cur_page}/{total_pages}:\n{contents[cur_page - 1]}```"
+                        embed=contents[cur_page - 1]
                     )
                     await message.remove_reaction(reaction, user)
 
                 elif (
-                    str(reaction.emoji) == constants.LEFT_REACTION_EMOJI
-                    and cur_page > 1
+                        str(reaction.emoji) == constants.LEFT_REACTION_EMOJI
+                        and cur_page > 1
                 ):
                     cur_page -= 1
                     await message.edit(
-                        content=f"{map_name}\n```Page {cur_page}/{total_pages}:\n{contents[cur_page - 1]}```"
+                        embed=contents[cur_page - 1]
                     )
                     await message.remove_reaction(reaction, user)
 
@@ -67,13 +114,13 @@ class MapSearch(commands.Cog, name="Map Search"):
                     if cur_page == total_pages:
                         cur_page = 1
                         await message.edit(
-                            content=f"{map_name}\n```Page {cur_page}/{total_pages}:\n{contents[cur_page - 1]}```"
+                            embed=contents[cur_page - 1]
                         )
                         await message.remove_reaction(reaction, user)
                     elif cur_page == 1:
                         cur_page = total_pages
                         await message.edit(
-                            content=f"{map_name}\n```Page {cur_page}/{total_pages}:\n{contents[cur_page - 1]}```"
+                            embed=contents[cur_page - 1]
                         )
                         await message.remove_reaction(reaction, user)
 
@@ -85,45 +132,27 @@ class MapSearch(commands.Cog, name="Map Search"):
     """
     Newest maps
     """
+
     @commands.command(
         help="Lists most recent submitted maps",
         brief="",
         aliases=["new", "latest"]
     )
     async def newest(self, ctx):
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Map Name", "Description", "Creator"]
-        )
+        embed = discord.Embed(title="Newest Maps")
+
         count = await MapData.count_documents()
+        row = 0
         async for entry in MapData.find(
                 {"map_type": {"$nin": ["NOSTALGIA"]}}
         ).skip(count - constants.NEWEST_MAPS_LIMIT):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    constants.PRETTY_NAMES[entry.map_name],
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
+            embed.add_field(
+                name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
+                value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
+                inline=False)
+            row = 1
         if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx,
-                    split_pt,
-                    ceil(row / constants.PT_PAGE_SIZE),
-                    "Latest Maps",
-                )
-            else:
-                await ctx.send(f"Latest Maps```Page 1/1:\n{pt}```")
+            await ctx.send(embed=embed)
         else:
             await ctx.send(f"No latest maps!")
 
@@ -136,40 +165,8 @@ class MapSearch(commands.Cog, name="Map Search"):
         brief="Search for maps by a specific creator",
     )
     async def creator(self, ctx, creator):
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Map Name", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"creator": re.compile(creator, re.IGNORECASE)}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    constants.PRETTY_NAMES[entry.map_name],
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx,
-                    split_pt,
-                    ceil(row / constants.PT_PAGE_SIZE),
-                    creator.capitalize(),
-                )
-            else:
-                await ctx.send(f"{creator.capitalize()}```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No maps from {creator.capitalize()}!")
+        query = {"creator": re.compile(creator, re.IGNORECASE)}
+        await self.searchmap(ctx, query, creator=creator.capitalize())
 
     """
     Reverse map search
@@ -180,26 +177,19 @@ class MapSearch(commands.Cog, name="Map Search"):
         brief="Search for the creator/details of a map",
     )
     async def mapcode(self, ctx, map_code):
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Map Name", "Description", "Creator"]
-        )
-        async for entry in MapData.find({"_id": map_code.upper()}):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    constants.PRETTY_NAMES[entry.map_name],
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row = 1
-        if row:
-            await ctx.send(f"```\n{pt}```")
+        code = map_code.upper()
+        query = {"_id": code}
+        embed = None
+        async for entry in MapData.find(query):
+            embed = discord.Embed()
+            embed.add_field(
+                    name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
+                    value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
+                    inline=False)
+        if embed:
+            await ctx.send(embed=embed)
         else:
-            await ctx.send(f"No maps {map_code.upper()}!")
-
+            await ctx.send(f"{code} does not exist!")
     """
     Megamap / Multimaps
     """
@@ -210,34 +200,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def megamap(self, ctx):
         map_name = "Megamap"
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Name", "Description", "Creator"]
-        )
-        async for entry in MapData.find({"type": "MEGAMAP"}):
-            pt.add_row(
-                [
-                    entry.code,
-                    constants.PRETTY_NAMES[entry.map_name],
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No {map_name}s!")
+        query = {"type": "MEGAMAP"}
+        await self.searchmap(ctx, query, map_name=map_name)
 
     @commands.command(
         help="Display all multimaps",
@@ -245,38 +209,13 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def multimap(self, ctx):
         map_name = "Multimap"
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Name", "Description", "Creator"]
-        )
-        async for entry in MapData.find({"type": "MULTIMAP"}):
-            pt.add_row(
-                [
-                    entry.code,
-                    constants.PRETTY_NAMES[entry.map_name],
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No {map_name}s!")
+        query = {"type": "MULTIMAP"}
+        await self.searchmap(ctx, query, map_name=map_name)
 
     """
     Normal Maps
     """
+
     @commands.command(
         aliases=constants.AYUTTHAYA[1:],
         help="Display all Ayutthaya maps. Optional argument for a single <map_type> to filter search. Use '/help maptypes' for a list of map types",
@@ -285,45 +224,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ayutthaya(self, ctx, map_type=""):
         map_name = "Ayutthaya"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.BLACKFOREST[1:],
@@ -333,45 +237,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def blackforest(self, ctx, map_type=""):
         map_name = "Black Forest"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.BLIZZARDWORLD[1:],
@@ -381,45 +250,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def blizzardworld(self, ctx, map_type=""):
         map_name = "Blizzard World"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.BUSAN[1:],
@@ -429,45 +263,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def busan(self, ctx, map_type=""):
         map_name = "Busan"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.CASTILLO[1:],
@@ -477,45 +276,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def castillo(self, ctx, map_type=""):
         map_name = "Castillo"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.CHATEAUGUILLARD[1:],
@@ -525,45 +289,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def chateauguillard(self, ctx, map_type=""):
         map_name = "Chateau Guillard"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.DORADO[1:],
@@ -573,45 +302,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def dorado(self, ctx, map_type=""):
         map_name = "Dorado"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.EICHENWALDE[1:],
@@ -621,45 +315,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def eichenwalde(self, ctx, map_type=""):
         map_name = "Eichenwalde"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.HANAMURA[1:],
@@ -669,45 +328,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def hanamura(self, ctx, map_type=""):
         map_name = "Hanamura"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.HAVANA[1:],
@@ -717,45 +341,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def havana(self, ctx, map_type=""):
         map_name = "Havana"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.HOLLYWOOD[1:],
@@ -765,45 +354,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def hollywood(self, ctx, map_type=""):
         map_name = "Hollywood"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.HORIZONLUNARCOLONY[1:],
@@ -813,45 +367,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def horizonlunarcolony(self, ctx, map_type=""):
         map_name = "Horizon Lunar Colony"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.ILIOS[1:],
@@ -861,45 +380,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ilios(self, ctx, map_type=""):
         map_name = "Ilios"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.JUNKERTOWN[1:],
@@ -909,45 +393,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def junkertown(self, ctx, map_type=""):
         map_name = "Junkertown"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.LIJIANGTOWER[1:],
@@ -957,45 +406,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def lijiangtower(self, ctx, map_type=""):
         map_name = "Lijiang Tower"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.NECROPOLIS[1:],
@@ -1005,45 +419,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def necropolis(self, ctx, map_type=""):
         map_name = "Necropolis"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.NEPAL[1:],
@@ -1053,45 +432,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def nepal(self, ctx, map_type=""):
         map_name = "Nepal"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.NUMBANI[1:],
@@ -1101,45 +445,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def numbani(self, ctx, map_type=""):
         map_name = "Numbani"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.OASIS[1:],
@@ -1149,45 +458,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def oasis(self, ctx, map_type=""):
         map_name = "Oasis"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.PARIS[1:],
@@ -1197,45 +471,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def paris(self, ctx, map_type=""):
         map_name = "Paris"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.RIALTO[1:],
@@ -1245,45 +484,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def rialto(self, ctx, map_type=""):
         map_name = "Rialto"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.ROUTE66[1:],
@@ -1293,45 +497,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def route66(self, ctx, map_type=""):
         map_name = "Route 66"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.TEMPLEOFANUBIS[1:],
@@ -1341,45 +510,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def templeofanubis(self, ctx, map_type=""):
         map_name = "Temple of Anubis"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.VOLSKAYAINDUSTRIES[1:],
@@ -1389,45 +523,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def volskayaindustries(self, ctx, map_type=""):
         map_name = "Volskaya Industries"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.WATCHPOINTGIBRALTAR[1:],
@@ -1437,45 +536,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def watchpointgibraltar(self, ctx, map_type=""):
         map_name = "Watchpoint Gibraltar"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.KINGSROW[1:],
@@ -1485,45 +549,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def kingsrow(self, ctx, map_type=""):
         map_name = "King's Row"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.PETRA[1:],
@@ -1533,45 +562,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def petra(self, ctx, map_type=""):
         map_name = "Petra"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.ECOPOINTANTARCTICA[1:],
@@ -1581,45 +575,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ecopointantarctica(self, ctx, map_type=""):
         map_name = "Ecopoint Antarctica"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.KANEZAKA[1:],
@@ -1629,45 +588,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def kanezaka(self, ctx, map_type=""):
         map_name = "Kanezaka"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     """
     Workshop maps / Practice Range 
@@ -1681,45 +605,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopchamber(self, ctx, map_type=""):
         map_name = "Workshop Chamber"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.WORKSHOPEXPANSE[1:],
@@ -1729,45 +618,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopexpanse(self, ctx, map_type=""):
         map_name = "Workshop Expanse"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.WORKSHOPGREENSCREEN[1:],
@@ -1777,45 +631,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopgreenscreen(self, ctx, map_type=""):
         map_name = "Workshop Greenscreen"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.WORKSHOPISLAND[1:],
@@ -1825,45 +644,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopisland(self, ctx, map_type=""):
         map_name = "Workshop Island"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
     @commands.command(
         aliases=constants.PRACTICERANGE[1:],
@@ -1873,45 +657,10 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def practicerange(self, ctx, map_type=""):
         map_name = "Practice Range"
-        if map_type:
-            map_type = map_type.upper()
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-        row = 0
-        pt = prettytable.PrettyTable(
-            field_names=["Map Code", "Map Type", "Description", "Creator"]
-        )
-        async for entry in MapData.find(
-            {"map_name": f"{''.join(map_name.split()).lower()}", "type": map_type}
-            if map_type
-            else {"map_name": f"{''.join(map_name.split()).lower()}"}
-        ):
-            pt.add_row(
-                [
-                    entry.code,
-                    fill(" ".join(entry.type), constants.TYPE_MAX_LENGTH),
-                    fill(entry.desc, constants.DESC_MAX_LENGTH),
-                    fill(entry.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-            row += 1
-        if row:
-            if ceil(row / constants.PT_PAGE_SIZE) != 1:
-                s, e, split_pt = 0, constants.PT_PAGE_SIZE - 1, []
-                while s < row:
-                    split_pt.append(pt.get_string(start=s, end=e))
-                    s += constants.PT_PAGE_SIZE
-                    e += constants.PT_PAGE_SIZE
-                await self.pages(
-                    ctx, split_pt, ceil(row / constants.PT_PAGE_SIZE), map_name
-                )
-            else:
-                await ctx.send(f"{map_name}\n```Page 1/1:\n{pt}```")
-        else:
-            await ctx.send(f"No codes for {map_name}!")
+        query = {"map_name": f"{''.join(map_name.split()).lower()}",
+                 "type": map_type.upper()} if map_type else {
+            "map_name": f"{''.join(map_name.split()).lower()}"}
+        await self.searchmap(ctx, query, map_type=map_type)
 
 
 def setup(bot):

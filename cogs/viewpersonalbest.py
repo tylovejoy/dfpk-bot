@@ -1,9 +1,15 @@
 import discord
 from discord.ext import commands
 import asyncio
-from internal import constants, utilities
+from internal import utilities
 from database.WorldRecords import WorldRecords
 import prettytable
+import sys
+if len(sys.argv) > 1:
+    if sys.argv[1] == "test":
+        from internal import test_constants as constants
+else:
+    from internal import constants
 
 
 class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):

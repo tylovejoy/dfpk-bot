@@ -1,12 +1,14 @@
 import discord
 from discord.ext import commands
 import asyncio
-from internal import constants, utilities, confirmation
+from internal import utilities
 from database.WorldRecords import WorldRecords
-from mongosanitizer.sanitizer import sanitize
-import prettytable
-import datetime
-import logging
+import sys
+if len(sys.argv) > 1:
+    if sys.argv[1] == "test":
+        from internal import test_constants as constants
+else:
+    from internal import constants
 
 
 class Verification(commands.Cog, name="Verification"):

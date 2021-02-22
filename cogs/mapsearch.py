@@ -10,7 +10,7 @@ from textwrap import fill
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import test_constants as constants, utilities
 else:
     from internal import constants
 
@@ -38,7 +38,6 @@ class MapSearch(commands.Cog, name="Map Search"):
     ):
         # Checks for map_type, if exists
         if map_type:
-            map_type = map_type.upper()
             if map_type not in constants.TYPES_OF_MAP:
                 await ctx.send(
                     f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
@@ -247,6 +246,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ayutthaya(self, ctx, map_type=""):
         map_name = "Ayutthaya"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -258,6 +258,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def blackforest(self, ctx, map_type=""):
         map_name = "Black Forest"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -269,6 +270,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def blizzardworld(self, ctx, map_type=""):
         map_name = "Blizzard World"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -280,6 +282,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def busan(self, ctx, map_type=""):
         map_name = "Busan"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -291,6 +294,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def castillo(self, ctx, map_type=""):
         map_name = "Castillo"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -302,6 +306,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def chateauguillard(self, ctx, map_type=""):
         map_name = "Chateau Guillard"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -313,6 +318,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def dorado(self, ctx, map_type=""):
         map_name = "Dorado"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -324,6 +330,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def eichenwalde(self, ctx, map_type=""):
         map_name = "Eichenwalde"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -335,6 +342,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def hanamura(self, ctx, map_type=""):
         map_name = "Hanamura"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -346,6 +354,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def havana(self, ctx, map_type=""):
         map_name = "Havana"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -357,6 +366,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def hollywood(self, ctx, map_type=""):
         map_name = "Hollywood"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -368,6 +378,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def horizonlunarcolony(self, ctx, map_type=""):
         map_name = "Horizon Lunar Colony"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -379,6 +390,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ilios(self, ctx, map_type=""):
         map_name = "Ilios"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -390,6 +402,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def junkertown(self, ctx, map_type=""):
         map_name = "Junkertown"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -401,6 +414,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def lijiangtower(self, ctx, map_type=""):
         map_name = "Lijiang Tower"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -412,6 +426,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def necropolis(self, ctx, map_type=""):
         map_name = "Necropolis"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -423,6 +438,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def nepal(self, ctx, map_type=""):
         map_name = "Nepal"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -434,6 +450,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def numbani(self, ctx, map_type=""):
         map_name = "Numbani"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -445,6 +462,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def oasis(self, ctx, map_type=""):
         map_name = "Oasis"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -456,6 +474,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def paris(self, ctx, map_type=""):
         map_name = "Paris"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -467,6 +486,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def rialto(self, ctx, map_type=""):
         map_name = "Rialto"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -478,6 +498,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def route66(self, ctx, map_type=""):
         map_name = "Route 66"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -489,6 +510,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def templeofanubis(self, ctx, map_type=""):
         map_name = "Temple of Anubis"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -500,6 +522,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def volskayaindustries(self, ctx, map_type=""):
         map_name = "Volskaya Industries"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -511,6 +534,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def watchpointgibraltar(self, ctx, map_type=""):
         map_name = "Watchpoint Gibraltar"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -522,6 +546,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def kingsrow(self, ctx, map_type=""):
         map_name = "King's Row"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -533,6 +558,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def petra(self, ctx, map_type=""):
         map_name = "Petra"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -544,6 +570,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ecopointantarctica(self, ctx, map_type=""):
         map_name = "Ecopoint Antarctica"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -555,6 +582,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def kanezaka(self, ctx, map_type=""):
         map_name = "Kanezaka"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -570,6 +598,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopchamber(self, ctx, map_type=""):
         map_name = "Workshop Chamber"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -581,6 +610,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopexpanse(self, ctx, map_type=""):
         map_name = "Workshop Expanse"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -592,6 +622,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopgreenscreen(self, ctx, map_type=""):
         map_name = "Workshop Greenscreen"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -603,6 +634,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopisland(self, ctx, map_type=""):
         map_name = "Workshop Island"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
@@ -614,6 +646,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def practicerange(self, ctx, map_type=""):
         map_name = "Practice Range"
+        map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 

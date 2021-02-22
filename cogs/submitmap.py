@@ -140,27 +140,18 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
                 else False
             ):
-                pt = prettytable.PrettyTable(
-                    field_names=[
-                        "Map Code",
-                        "Map Type",
-                        "Map Name",
-                        "Description",
-                        "Creator",
-                    ]
+                embed = discord.Embed(title="Do you want to delete this?")
+                embed.add_field(
+                    name=f"{search.code}",
+                    value=(
+                        f"> Map: {constants.PRETTY_NAMES[search.map_name]}\n"
+                        f"> Creator: {search.creator}\n"
+                        f"> Map Types: {' '.join(search.type)}\n"
+                        f"> Description: {search.desc}"
+                    ),
+                    inline=False,
                 )
-                pt.add_row(
-                    [
-                        search.code,
-                        fill(" ".join(search.type), constants.TYPE_MAX_LENGTH),
-                        constants.PRETTY_NAMES[search.map_name],
-                        fill(search.desc, constants.DESC_MAX_LENGTH),
-                        fill(search.creator, constants.CREATOR_MAX_LENGTH),
-                    ]
-                )
-                msg = await ctx.send(
-                    f"```\nAre you sure you want to delete {map_code}?\n{pt}```"
-                )
+                msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been deleted.")
@@ -195,25 +186,19 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 else False
             ):
                 search.desc = desc
-                pt = prettytable.PrettyTable(
-                    field_names=[
-                        "Map Code",
-                        "Map Type",
-                        "Map Name",
-                        "Description",
-                        "Creator",
-                    ]
+                embed = discord.Embed(title="Is this submission correct?")
+
+                embed.add_field(
+                    name=f"{search.code}",
+                    value=(
+                        f"> Map: {constants.PRETTY_NAMES[search.map_name]}\n"
+                        f"> Creator: {search.creator}\n"
+                        f"> Map Types: {' '.join(search.type)}\n"
+                        f"> Description: {search.desc}"
+                    ),
+                    inline=False,
                 )
-                pt.add_row(
-                    [
-                        search.code,
-                        fill(" ".join(search.type), constants.TYPE_MAX_LENGTH),
-                        constants.PRETTY_NAMES[search.map_name],
-                        fill(search.desc, constants.DESC_MAX_LENGTH),
-                        fill(search.creator, constants.CREATOR_MAX_LENGTH),
-                    ]
-                )
-                msg = await ctx.send(f"```\n{map_code}: Is this edit correct?\n{pt}```")
+                msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been edited.")
@@ -235,7 +220,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
             map_code.replace("$", "")
             map_type.replace("$", "")
         map_code = map_code.upper()
-        map_type = [x.upper() for x in map_type.split()]
+        map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
         for x in map_type:
             if x not in constants.TYPES_OF_MAP:
                 await ctx.send(
@@ -250,25 +235,62 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 else False
             ):
                 search.type = map_type
-                pt = prettytable.PrettyTable(
-                    field_names=[
-                        "Map Code",
-                        "Map Type",
-                        "Map Name",
-                        "Description",
-                        "Creator",
-                    ]
+                embed = discord.Embed(title="Is this submission correct?")
+
+                embed.add_field(
+                    name=f"{search.code}",
+                    value=(
+                        f"> Map: {constants.PRETTY_NAMES[search.map_name]}\n"
+                        f"> Creator: {search.creator}\n"
+                        f"> Map Types: {' '.join(search.type)}\n"
+                        f"> Description: {search.desc}"
+                    ),
+                    inline=False,
                 )
-                pt.add_row(
-                    [
-                        search.code,
-                        fill(" ".join(search.type), constants.TYPE_MAX_LENGTH),
-                        constants.PRETTY_NAMES[search.map_name],
-                        fill(search.desc, constants.DESC_MAX_LENGTH),
-                        fill(search.creator, constants.CREATOR_MAX_LENGTH),
-                    ]
+                msg = await ctx.send(embed=embed)
+                confirmed = await confirmation.confirm(ctx, msg)
+                if confirmed is True:
+                    await msg.edit(content=f"{search.code} has been edited.")
+                    await search.commit()
+                elif confirmed is False:
+                    await msg.edit(content=f"{search.code} has not been edited.")
+                elif confirmed is None:
+                    await msg.edit(
+                        content=f"Submission timed out! {search.code} has not been edited."
+                    )
+                await msg.clear_reactions()
+
+    @commands.command(
+        help="Edit the map code for a certain map code.\nOnly original posters and mods can edit a map code.",
+        brief="Edit the map code for a certain map code",
+    )
+    async def editcode(self, ctx, map_code, new_map_code):
+        if "$" in map_code or "$" in new_map_code:
+            map_code.replace("$", "")
+            new_map_code.replace("$", "")
+        map_code = map_code.upper()
+        new_map_code = new_map_code.upper()
+        if await MapData.count_documents({"code": map_code}) == 1:
+            search = await MapData.find_one({"code": map_code})
+            if search.posted_by == ctx.author.id or (
+                True
+                if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
+                else False
+            ):
+                search.code = new_map_code
+                embed = discord.Embed(title="Is this submission correct?")
+
+                embed.add_field(
+                    name=f"{search.code}",
+                    value=(
+                        f"> Map: {constants.PRETTY_NAMES[search.map_name]}\n"
+                        f"> Creator: {search.creator}\n"
+                        f"> Map Types: {' '.join(search.type)}\n"
+                        f"> Description: {search.desc}"
+                    ),
+                    inline=False,
                 )
-                msg = await ctx.send(f"```\n{map_code}: Is this edit correct?\n{pt}```")
+                msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been edited.")

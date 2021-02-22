@@ -65,7 +65,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 ),
                 inline=False,
             )
-            await ctx.channel.send(embed=embed)
+            await ctx.channel.send(f"{search.url}", embed=embed)
         else:
             await ctx.channel.send("Personal best doesn't exist.")
 
@@ -161,12 +161,16 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"CODE: {map_code} - LEVEL NAMES:\n"
         level_checker = set()
         async for entry in (
-            WorldRecords.find({"code": map_code}).sort("record", 1).limit(30)
+            WorldRecords.find({"code": map_code})
+            .sort([("level", 1)])
+            .limit(30)
         ):
             if entry.level not in level_checker:
                 level_checker.add(entry.level)
         if level_checker:
-            await ctx.send(f"{title}```" + ", ".join(level_checker) + "```")
+            embed = discord.Embed(title=f"{map_code}")
+            embed.add_field(name="Currenly submitted levels:", value=f"{', '.join(level_checker)}")
+            await ctx.send(embed=embed)
         else:
             await ctx.send(f"No level names found for {map_code}!")
 

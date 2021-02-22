@@ -55,3 +55,12 @@ def display_record(record):
         return str(datetime.timedelta(seconds=record))[: -4 or None]
     else:
         return str(datetime.timedelta(seconds=record)) + ".00"
+
+
+def convert_short_types(map_type):
+    if map_type in ["MULTI", "MULTILVL", "MULTILEVEL"]:
+        return "MULTILEVEL"
+    elif map_type in ["PIO", "PIONEER"]:
+        return "PIONEER"
+    else:
+        return map_type

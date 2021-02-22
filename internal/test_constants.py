@@ -6,8 +6,8 @@ If you wish to add or edit a constant, please make sure to comment the meaning o
 
 TYPES_OF_MAP = [
     "SINGLE",
-    "MULTI",
-    "PIO",
+    "MULTILEVEL",
+    "PIONEER",
     "TIME-ATTACK",
     "MEGAMAP",
     "MULTIMAP",

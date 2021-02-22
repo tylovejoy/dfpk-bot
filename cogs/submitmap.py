@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import asyncio
-from internal import confirmation
+from internal import confirmation, utilities
 from database.MapData import MapData
 from mongosanitizer.sanitizer import sanitize
 import prettytable
@@ -69,7 +69,9 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 "<map_name> doesn't exist! Map submission rejected. Use `/maps` for a list of acceptable maps."
             )
             return
-        map_type = [x.upper() for x in map_type.split()]
+
+        map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
+
         for x in map_type:
             if x not in constants.TYPES_OF_MAP:
                 await ctx.send(
@@ -79,7 +81,6 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         map_code = map_code.upper()
         map_name = map_name.lower()
         count = await MapData.count_documents({"code": map_code})
-        print(count)
         if count == 0:
 
             new_map_name = map_name_converter(map_name)
@@ -93,27 +94,19 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     type=map_type,
                 )
             )
+            embed = discord.Embed(title="Is this submission correct?")
 
-            pt = prettytable.PrettyTable(
-                field_names=[
-                    "Map Code",
-                    "Map Type",
-                    "Map Name",
-                    "Description",
-                    "Creator",
-                ]
+            embed.add_field(
+                name=f"{submission.code}",
+                value=(
+                    f"> Map: {constants.PRETTY_NAMES[submission.map_name]}\n"
+                    f"> Creator: {submission.creator}\n"
+                    f"> Map Types: {' '.join(submission.type)}\n"
+                    f"> Description: {submission.desc}"
+                ),
+                inline=False,
             )
-            pt.add_row(
-                [
-                    submission.code,
-                    fill(" ".join(submission.type), constants.TYPE_MAX_LENGTH),
-                    constants.PRETTY_NAMES[submission.map_name],
-                    fill(submission.desc, constants.DESC_MAX_LENGTH),
-                    fill(submission.creator, constants.CREATOR_MAX_LENGTH),
-                ]
-            )
-
-            msg = await ctx.send(f"Is this correct?")
+            msg = await ctx.send(embed=embed)
             confirmed = await confirmation.confirm(ctx, msg)
 
             if confirmed is True:
@@ -131,7 +124,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 )
 
         else:
-            await ctx.send("<map_code> already exists! Map submission rejected.")
+            await ctx.send(f"{map_code} already exists! Map submission rejected.")
 
     # Delete map code
     @commands.command(

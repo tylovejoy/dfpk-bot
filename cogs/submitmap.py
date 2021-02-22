@@ -7,6 +7,7 @@ from mongosanitizer.sanitizer import sanitize
 import prettytable
 from textwrap import fill
 import sys
+
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
         from internal import test_constants as constants
@@ -21,7 +22,8 @@ def map_name_converter(map_name):
     else:
         return False
 
-
+# TODO: Change the entire class to embeds
+# TODO: Add map code edit, and full edit
 class SubmitMap(commands.Cog, name="Map submission/deletion"):
     def __init__(self, bot):
         self.bot = bot
@@ -76,8 +78,9 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 return
         map_code = map_code.upper()
         map_name = map_name.lower()
-
-        if await MapData.count_documents({"_id": map_code}) == 0:
+        count = await MapData.count_documents({"code": map_code})
+        print(count)
+        if count == 0:
 
             new_map_name = map_name_converter(map_name)
             submission = MapData(
@@ -110,7 +113,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 ]
             )
 
-            msg = await ctx.send(f"```\nYou submitted:\n{pt}\nIs this correct?```")
+            msg = await ctx.send(f"Is this correct?")
             confirmed = await confirmation.confirm(ctx, msg)
 
             if confirmed is True:
@@ -137,8 +140,8 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
     )
     async def deletemap(self, ctx, map_code):
         map_code = map_code.upper()
-        if await MapData.count_documents({"_id": map_code}) == 1:
-            search = await MapData.find_one({"_id": map_code})
+        if await MapData.count_documents({"code": map_code}) == 1:
+            search = await MapData.find_one({"code": map_code})
             if search.posted_by == ctx.author.id or (
                 True
                 if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
@@ -191,8 +194,8 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
             map_code.replace("$", "")
             desc.replace("$", "")
         map_code = map_code.upper()
-        if await MapData.count_documents({"_id": map_code}) == 1:
-            search = await MapData.find_one({"_id": map_code})
+        if await MapData.count_documents({"code": map_code}) == 1:
+            search = await MapData.find_one({"code": map_code})
             if search.posted_by == ctx.author.id or (
                 True
                 if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
@@ -246,8 +249,8 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     "<map_type> doesn't exist! Map submission rejected. Use `/maptypes` for a list of acceptable map types."
                 )
                 return
-        if await MapData.count_documents({"_id": map_code}) == 1:
-            search = await MapData.find_one({"_id": map_code})
+        if await MapData.count_documents({"code": map_code}) == 1:
+            search = await MapData.find_one({"code": map_code})
             if search.posted_by == ctx.author.id or (
                 True
                 if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)

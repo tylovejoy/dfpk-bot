@@ -10,7 +10,8 @@ from discord.ext import commands
 
 from internal.botclass import Bot
 from internal.intentcalculator import calculate_intents
-#from internal.keepalive import keep_alive
+
+# from internal.keepalive import keep_alive
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -81,17 +82,17 @@ async def run():
 
     try:
         # Start the keepalive endpoint
-        #if os.getenv('KEEP_ALIVE'):
+        # if os.getenv('KEEP_ALIVE'):
         #   keep_alive()
 
-        token = get_config_var('BOT_TOKEN', config, 'token', error=True)
+        token = get_config_var("BOT_TOKEN", config, "token", error=True)
         await bot.start(token)
     except KeyboardInterrupt:
         await bot.logout()
         exit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     loop = asyncio.get_event_loop()

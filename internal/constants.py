@@ -6,8 +6,8 @@ If you wish to add or edit a constant, please make sure to comment the meaning o
 
 TYPES_OF_MAP = [
     "SINGLE",
-    "MULTI",
-    "PIO",
+    "MULTILEVEL",
+    "PIONEER",
     "TIME-ATTACK",
     "MEGAMAP",
     "MULTIMAP",
@@ -16,7 +16,7 @@ TYPES_OF_MAP = [
     "MILDCORE",
     "OUT-OF-MAP",
     "ABLOCK",
-    "NOSTALGIA"
+    "NOSTALGIA",
 ]
 
 ROLE_WHITELIST = [

@@ -5,6 +5,7 @@ from internal import utilities, confirmation
 from database.WorldRecords import WorldRecords
 import prettytable
 import sys
+
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
         from internal import test_constants as constants
@@ -49,13 +50,16 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 return
         record_in_seconds = utilities.time_convert(record)
         level_checker = set()
+        embed = discord.Embed(title="Is this correct?")
         async for entry in (
-            WorldRecords.find({"code": map_code.upper()})
-            .sort("record", 1)
-            .limit(30)
+            WorldRecords.find({"code": map_code.upper()}).sort("record", 1).limit(30)
         ):
             if entry.level not in level_checker:
                 level_checker.add(entry.level)
+        embed.add_field(
+            name="Currently submitted level names:",
+            value=f"{', '.join(level_checker) if level_checker else 'N/A'}"
+        )
         if record_in_seconds:
             map_code = map_code.upper()
             which_place = False
@@ -79,24 +83,23 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                         verified=False,
                     )
                 )
-
-                pt = prettytable.PrettyTable(
-                    field_names=["Map Code", "Level", "Record", "Name"]
-                )
-                pt.add_row(
-                    [
-                        submission.code,
-                        submission.level,
-                        utilities.display_record(record_in_seconds),
-                        submission.name,
-                    ]
+                embed.add_field(
+                    name=f"Name: {submission.name}",
+                    value=(
+                        f"> Code: {submission.code}\n"
+                        f"> Level: {submission.level}\n"
+                        f"> Record: {utilities.display_record(record_in_seconds)}\n"
+                    ),
+                    inline=False,
                 )
 
-                msg = await ctx.send("```\nCurrently submitted level names for {map_code}: " + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
+                msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
 
                 if confirmed is True:
-                    await msg.edit(content=f"```\n{pt}```\nSubmission accepted")
+                    await msg.edit(
+                        content=f"Submission accepted",
+                    )
 
                     channel = self.bot.get_channel(
                         constants.HIDDEN_VERIFICATION_CHANNEL
@@ -111,10 +114,12 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     await ctx.message.add_reaction(constants.NOT_VERIFIED_EMOJI)
                     which_place = True
                 elif confirmed is False:
-                    await msg.edit(content=f"Submission has not been accepted.")
+                    await msg.edit(
+                        content=f"Submission has not been accepted.",
+                    )
                 elif confirmed is None:
                     await msg.edit(
-                        content=f"Submission timed out! Submission has not been accepted."
+                        content=f"Submission timed out! Submission has not been accepted.",
                     )
 
             # If there is already a personal best in DB
@@ -129,18 +134,21 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 )
                 # If new record is faster than old record
                 if record_in_seconds < submission.record:
-                    pt = prettytable.PrettyTable(
-                        field_names=["Map Code", "Level", "Record", "Name"]
+                    embed.add_field(
+                        name=f"Name: {submission.name}",
+                        value=(
+                            f"> Code: {submission.code}\n"
+                            f"> Level: {submission.level}\n"
+                            f"> Record: {utilities.display_record(record_in_seconds)}\n"
+                        ),
+                        inline=False,
                     )
-                    pt.add_row(
-                        [
-                            submission.code,
-                            submission.level,
-                            utilities.display_record(record_in_seconds),
-                            submission.name,
-                        ]
+                    msg = await ctx.send(
+                        f"```\nCurrently submitted level names for {map_code}: "
+                        + ", ".join(level_checker)
+                        + "```",
+                        embed=embed
                     )
-                    msg = await ctx.send(f"```\nCurrently submitted level names for {map_code}: " + ", ".join(level_checker) + "```\n" + f"```\nIs this correct?\n{pt}```")
                     confirmed = await confirmation.confirm(ctx, msg)
 
                     if confirmed is True:
@@ -157,7 +165,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                         except:
                             pass
                         finally:
-                            await msg.edit(content=f"```\n{pt}```\nSubmission accepted")
+                            await msg.edit(content="Submission accepted")
 
                             # Update submission
                             submission.record = record_in_seconds
@@ -230,18 +238,17 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
                 else False
             ):
-                pt = prettytable.PrettyTable()
-                pt.field_names = ["Map Code", "Level", "Record", "Name", "Verified"]
-                pt.add_row(
-                    [
-                        search.code,
-                        search.level,
-                        utilities.display_record(search.record),
-                        search.name,
-                        search.verified,
-                    ]
+                embed = discord.Embed(title="Do you want to delete this?")
+                embed.add_field(
+                    name=f"Name: {search.name}",
+                    value=(
+                        f"> Code: {search.code}\n"
+                        f"> Level: {search.level}\n"
+                        f"> Record: {utilities.display_record(search.record)}\n"
+                    ),
+                    inline=False,
                 )
-                msg = await ctx.send(f"```\nDo you want to delete this?\n{pt}```")
+                msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
                 if confirmed is True:
                     await msg.edit(content=f"Personal best deleted succesfully.")

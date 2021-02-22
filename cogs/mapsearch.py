@@ -15,6 +15,16 @@ else:
     from internal import constants
 
 
+def normal_map_query(map_name, map_type=""):
+    if map_type:
+        return {
+            "map_name": f"{''.join(map_name.split()).lower()}",
+            "type": map_type.upper(),
+        }
+    else:
+        return {"map_name": f"{''.join(map_name.split()).lower()}"}
+
+
 class MapSearch(commands.Cog, name="Map Search"):
     def __init__(self, bot):
         self.bot = bot
@@ -23,7 +33,9 @@ class MapSearch(commands.Cog, name="Map Search"):
         if ctx.channel.id == constants.MAP_CHANNEL_ID:
             return True
 
-    async def searchmap(self, ctx, query: dict, map_type="", map_name="", creator="", map_code=""):
+    async def searchmap(
+        self, ctx, query: dict, map_type="", map_name="", creator="", map_code=""
+    ):
         # Checks for map_type, if exists
         if map_type:
             map_type = map_type.upper()
@@ -35,7 +47,13 @@ class MapSearch(commands.Cog, name="Map Search"):
 
         row, page, embeds = 0, 1, []
 
-        embed = discord.Embed(title=map_name if map_name else creator if creator else map_code + f" Page {page}")
+        embed = discord.Embed(
+            title=map_name
+            if map_name
+            else creator
+            if creator
+            else map_code + f" Page {page}"
+        )
         count = await MapData.count_documents(query)
 
         async for entry in MapData.find(query):
@@ -44,32 +62,44 @@ class MapSearch(commands.Cog, name="Map Search"):
                 embed.add_field(
                     name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
                     value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                    inline=False)
+                    inline=False,
+                )
                 page += 1
                 embeds.append(embed)
-                embed = discord.Embed(title=map_name if map_name else creator if creator else map_code + f" Page {page}")
+                embed = discord.Embed(
+                    title=map_name
+                    if map_name
+                    else creator
+                    if creator
+                    else map_code + f" Page {page}"
+                )
 
             elif row % 10 != 0 or row == 0:
                 embed.add_field(
                     name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
                     value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                    inline=False)
+                    inline=False,
+                )
 
             if count == 1:
                 embeds.append(embed)
             row += 1
 
         if row:
-            await self.pages(ctx, contents=embeds, total_pages=len(embeds),
-                             map_name=map_name if map_name else creator if creator else map_code)
+            await self.pages(
+                ctx,
+                contents=embeds,
+                total_pages=len(embeds),
+                map_name=map_name if map_name else creator if creator else map_code,
+            )
         else:
-            await ctx.send(f"Nothing exists for {map_name if map_name else creator if creator else map_code}!")
+            await ctx.send(
+                f"Nothing exists for {map_name if map_name else creator if creator else map_code}!"
+            )
 
     async def pages(self, ctx, contents, total_pages, map_name):
         cur_page = 1
-        message = await ctx.send(
-            embed=contents[cur_page - 1]
-        )
+        message = await ctx.send(embed=contents[cur_page - 1])
         # getting the message object for editing and reacting
 
         await message.add_reaction(constants.LEFT_REACTION_EMOJI)
@@ -91,37 +121,29 @@ class MapSearch(commands.Cog, name="Map Search"):
                 # example
 
                 if (
-                        str(reaction.emoji) == constants.RIGHT_REACTION_EMOJI
-                        and cur_page != total_pages
+                    str(reaction.emoji) == constants.RIGHT_REACTION_EMOJI
+                    and cur_page != total_pages
                 ):
                     cur_page += 1
-                    await message.edit(
-                        embed=contents[cur_page - 1]
-                    )
+                    await message.edit(embed=contents[cur_page - 1])
                     await message.remove_reaction(reaction, user)
 
                 elif (
-                        str(reaction.emoji) == constants.LEFT_REACTION_EMOJI
-                        and cur_page > 1
+                    str(reaction.emoji) == constants.LEFT_REACTION_EMOJI
+                    and cur_page > 1
                 ):
                     cur_page -= 1
-                    await message.edit(
-                        embed=contents[cur_page - 1]
-                    )
+                    await message.edit(embed=contents[cur_page - 1])
                     await message.remove_reaction(reaction, user)
 
                 else:
                     if cur_page == total_pages:
                         cur_page = 1
-                        await message.edit(
-                            embed=contents[cur_page - 1]
-                        )
+                        await message.edit(embed=contents[cur_page - 1])
                         await message.remove_reaction(reaction, user)
                     elif cur_page == 1:
                         cur_page = total_pages
-                        await message.edit(
-                            embed=contents[cur_page - 1]
-                        )
+                        await message.edit(embed=contents[cur_page - 1])
                         await message.remove_reaction(reaction, user)
 
             except asyncio.TimeoutError:
@@ -134,22 +156,21 @@ class MapSearch(commands.Cog, name="Map Search"):
     """
 
     @commands.command(
-        help="Lists most recent submitted maps",
-        brief="",
-        aliases=["new", "latest"]
+        help="Lists most recent submitted maps", brief="", aliases=["new", "latest"]
     )
     async def newest(self, ctx):
         embed = discord.Embed(title="Newest Maps")
 
         count = await MapData.count_documents()
         row = 0
-        async for entry in MapData.find(
-                {"map_type": {"$nin": ["NOSTALGIA"]}}
-        ).skip(count - constants.NEWEST_MAPS_LIMIT):
+        async for entry in MapData.find({"map_type": {"$nin": ["NOSTALGIA"]}}).skip(
+            count - constants.NEWEST_MAPS_LIMIT
+        ):
             embed.add_field(
                 name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
                 value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                inline=False)
+                inline=False,
+            )
             row = 1
         if row:
             await ctx.send(embed=embed)
@@ -178,18 +199,20 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def mapcode(self, ctx, map_code):
         code = map_code.upper()
-        query = {"_id": code}
+        query = {"code": code}
         embed = None
         async for entry in MapData.find(query):
             embed = discord.Embed()
             embed.add_field(
-                    name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
-                    value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                    inline=False)
+                name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
+                value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
+                inline=False,
+            )
         if embed:
             await ctx.send(embed=embed)
         else:
             await ctx.send(f"{code} does not exist!")
+
     """
     Megamap / Multimaps
     """
@@ -224,10 +247,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ayutthaya(self, ctx, map_type=""):
         map_name = "Ayutthaya"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.BLACKFOREST[1:],
@@ -237,10 +258,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def blackforest(self, ctx, map_type=""):
         map_name = "Black Forest"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.BLIZZARDWORLD[1:],
@@ -250,10 +269,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def blizzardworld(self, ctx, map_type=""):
         map_name = "Blizzard World"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.BUSAN[1:],
@@ -263,10 +280,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def busan(self, ctx, map_type=""):
         map_name = "Busan"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.CASTILLO[1:],
@@ -276,10 +291,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def castillo(self, ctx, map_type=""):
         map_name = "Castillo"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.CHATEAUGUILLARD[1:],
@@ -289,10 +302,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def chateauguillard(self, ctx, map_type=""):
         map_name = "Chateau Guillard"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.DORADO[1:],
@@ -302,10 +313,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def dorado(self, ctx, map_type=""):
         map_name = "Dorado"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.EICHENWALDE[1:],
@@ -315,10 +324,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def eichenwalde(self, ctx, map_type=""):
         map_name = "Eichenwalde"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HANAMURA[1:],
@@ -328,10 +335,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def hanamura(self, ctx, map_type=""):
         map_name = "Hanamura"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HAVANA[1:],
@@ -341,10 +346,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def havana(self, ctx, map_type=""):
         map_name = "Havana"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HOLLYWOOD[1:],
@@ -354,10 +357,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def hollywood(self, ctx, map_type=""):
         map_name = "Hollywood"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HORIZONLUNARCOLONY[1:],
@@ -367,10 +368,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def horizonlunarcolony(self, ctx, map_type=""):
         map_name = "Horizon Lunar Colony"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.ILIOS[1:],
@@ -380,10 +379,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ilios(self, ctx, map_type=""):
         map_name = "Ilios"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.JUNKERTOWN[1:],
@@ -393,10 +390,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def junkertown(self, ctx, map_type=""):
         map_name = "Junkertown"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.LIJIANGTOWER[1:],
@@ -406,10 +401,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def lijiangtower(self, ctx, map_type=""):
         map_name = "Lijiang Tower"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.NECROPOLIS[1:],
@@ -419,10 +412,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def necropolis(self, ctx, map_type=""):
         map_name = "Necropolis"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.NEPAL[1:],
@@ -432,10 +423,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def nepal(self, ctx, map_type=""):
         map_name = "Nepal"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.NUMBANI[1:],
@@ -445,10 +434,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def numbani(self, ctx, map_type=""):
         map_name = "Numbani"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.OASIS[1:],
@@ -458,10 +445,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def oasis(self, ctx, map_type=""):
         map_name = "Oasis"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.PARIS[1:],
@@ -471,10 +456,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def paris(self, ctx, map_type=""):
         map_name = "Paris"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.RIALTO[1:],
@@ -484,10 +467,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def rialto(self, ctx, map_type=""):
         map_name = "Rialto"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.ROUTE66[1:],
@@ -497,10 +478,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def route66(self, ctx, map_type=""):
         map_name = "Route 66"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.TEMPLEOFANUBIS[1:],
@@ -510,10 +489,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def templeofanubis(self, ctx, map_type=""):
         map_name = "Temple of Anubis"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.VOLSKAYAINDUSTRIES[1:],
@@ -523,10 +500,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def volskayaindustries(self, ctx, map_type=""):
         map_name = "Volskaya Industries"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WATCHPOINTGIBRALTAR[1:],
@@ -536,10 +511,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def watchpointgibraltar(self, ctx, map_type=""):
         map_name = "Watchpoint Gibraltar"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.KINGSROW[1:],
@@ -549,10 +522,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def kingsrow(self, ctx, map_type=""):
         map_name = "King's Row"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.PETRA[1:],
@@ -562,10 +533,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def petra(self, ctx, map_type=""):
         map_name = "Petra"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.ECOPOINTANTARCTICA[1:],
@@ -575,10 +544,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def ecopointantarctica(self, ctx, map_type=""):
         map_name = "Ecopoint Antarctica"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.KANEZAKA[1:],
@@ -588,10 +555,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def kanezaka(self, ctx, map_type=""):
         map_name = "Kanezaka"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     """
     Workshop maps / Practice Range 
@@ -605,10 +570,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopchamber(self, ctx, map_type=""):
         map_name = "Workshop Chamber"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPEXPANSE[1:],
@@ -618,10 +581,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopexpanse(self, ctx, map_type=""):
         map_name = "Workshop Expanse"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPGREENSCREEN[1:],
@@ -631,10 +592,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopgreenscreen(self, ctx, map_type=""):
         map_name = "Workshop Greenscreen"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPISLAND[1:],
@@ -644,10 +603,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def workshopisland(self, ctx, map_type=""):
         map_name = "Workshop Island"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.PRACTICERANGE[1:],
@@ -657,10 +614,8 @@ class MapSearch(commands.Cog, name="Map Search"):
     )
     async def practicerange(self, ctx, map_type=""):
         map_name = "Practice Range"
-        query = {"map_name": f"{''.join(map_name.split()).lower()}",
-                 "type": map_type.upper()} if map_type else {
-            "map_name": f"{''.join(map_name.split()).lower()}"}
-        await self.searchmap(ctx, query, map_type=map_type)
+        query = normal_map_query(map_name, map_type)
+        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
 
 def setup(bot):

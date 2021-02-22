@@ -16,7 +16,7 @@ TYPES_OF_MAP = [
     "MILDCORE",
     "OUT-OF-MAP",
     "ABLOCK",
-    "NOSTALGIA"
+    "NOSTALGIA",
 ]
 
 ROLE_WHITELIST = [

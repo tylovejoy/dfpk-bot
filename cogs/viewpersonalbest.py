@@ -5,11 +5,36 @@ from internal import utilities
 from database.WorldRecords import WorldRecords
 import prettytable
 import sys
+
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
         from internal import test_constants as constants
 else:
     from internal import constants
+
+
+async def boards(ctx, map_code, level, title, query):
+    """
+    Displays boards for scoreboard and leaderboard commands
+    """
+    count = 1
+    exists = False
+    embed = discord.Embed(title=f"{title}")
+    async for entry in (WorldRecords.find(query).sort("record", 1).limit(10)):
+        exists = True
+        embed.add_field(
+            name=f"#{count} - {entry.name}",
+            value=(
+                f"> Record: {utilities.display_record(entry.record)}\n"
+                f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}"
+            ),
+            inline=False,
+        )
+        count += 1
+    if exists:
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"No scoreboard for {map_code} level {level}!")
 
 
 class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
@@ -28,29 +53,19 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         if name == "":
             name = ctx.author.name
         map_code = map_code.upper()
-        if (
-            await WorldRecords.count_documents(
-                {"code": map_code, "name": name, "level": level}
+        query = {"code": map_code, "name": name, "level": level}
+        if await WorldRecords.count_documents(query) == 1:
+            search = await WorldRecords.find_one(query)
+            embed = discord.Embed(title=f"Personal best for {search.name}")
+            embed.add_field(
+                name=f"{search.code} - Level {search.level}",
+                value=(
+                    f"> Record: {utilities.display_record(search.record)}\n"
+                    f"> Verified: {constants.VERIFIED_EMOJI if search.verified is True else constants.NOT_VERIFIED_EMOJI}"
+                ),
+                inline=False,
             )
-            == 1
-        ):
-            search = await WorldRecords.find_one(
-                {"code": map_code, "name": name, "level": level}
-            )
-            pt = prettytable.PrettyTable(
-                field_names=["Level", "Record", "Name", "Verified"]
-            )
-            pt.add_row(
-                [
-                    search.level,
-                    utilities.display_record(search.record),
-                    search.name,
-                    constants.VERIFIED_EMOJI
-                    if search.verified is True
-                    else constants.NOT_VERIFIED_EMOJI,
-                ]
-            )
-            await ctx.channel.send(f"```\n{pt}```\n{search.url}")  # noqa: E501
+            await ctx.channel.send(embed=embed)
         else:
             await ctx.channel.send("Personal best doesn't exist.")
 
@@ -65,30 +80,8 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = (
             f"CODE: {map_code} LEVEL {level} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
         )
-        count = 1
-        post = 0
-        pt = prettytable.PrettyTable()
-        pt.field_names = ["Position", "Record", "Name", "Verified"]
-
-        async for entry in (WorldRecords.find({"code": map_code, "level": level})).sort(
-            "record", 1
-        ).limit(10):
-            post = 1
-            pt.add_row(
-                [
-                    count,
-                    utilities.display_record(entry.record),
-                    entry.name,
-                    constants.VERIFIED_EMOJI
-                    if entry.verified is True
-                    else constants.NOT_VERIFIED_EMOJI,
-                ]
-            )
-            count += 1
-        if post:
-            await ctx.send(f"{title}```\n{pt}```")
-        else:
-            await ctx.send(f"No scoreboard for {map_code} level {level}!")
+        query = {"code": map_code, "level": level}
+        await boards(ctx, map_code, level, title, query)
 
     # view leaderboard
     @commands.command(
@@ -99,31 +92,8 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     async def leaderboard(self, ctx, map_code, level):
         map_code = map_code.upper()
         title = f"CODE: {map_code} LEVEL {level} - TOP 10 VERIFIED RECORDS:\n"
-        post = 0
-        count = 1
-        pt = prettytable.PrettyTable()
-        pt.field_names = ["Position", "Record", "Name", "Verified"]
-        async for entry in (
-            WorldRecords.find({"code": map_code, "level": level, "verified": True})
-            .sort("record", 1)
-            .limit(10)
-        ):
-            post = 1
-            pt.add_row(
-                [
-                    count,
-                    utilities.display_record(entry.record),
-                    entry.name,
-                    constants.VERIFIED_EMOJI
-                    if entry.verified is True
-                    else constants.NOT_VERIFIED_EMOJI,
-                ]
-            )
-            count += 1
-        if post:
-            await ctx.send(f"{title}```\n{pt}```")
-        else:
-            await ctx.send(f"No leaderboard for {map_code} level {level}!")
+        query = {"code": map_code, "level": level, "verified": True}
+        await boards(ctx, map_code, level, title, query)
 
     # view world record
     @commands.command(
@@ -134,51 +104,47 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     async def worldrecord(self, ctx, map_code, level=""):
         map_code = map_code.upper()
         pt = prettytable.PrettyTable()
-        post = 0
+        exists = False
         url = ""
         if level == "":
-            title = f"CODE: {map_code} - VERIFIED WORLD RECORDS:\n"
+            title = f"{map_code} - VERIFIED WORLD RECORDS:\n"
             level_checker = set()
-            pt.field_names = ["Level", "Record", "Name", "Verified"]
+            embed = discord.Embed(title=f"{title}")
             async for entry in (
                 WorldRecords.find({"code": map_code, "verified": True})
-                .sort("record", 1)
-                .limit(30)
+                .sort([("level", 1), ("record", 1)])
+                .limit(25)
             ):
                 if entry.level not in level_checker:
-                    post = 1
+                    exists = True
                     level_checker.add(entry.level)
-                    pt.add_row(
-                        [
-                            entry.level,
-                            utilities.display_record(entry.record),
-                            entry.name,
-                            constants.VERIFIED_EMOJI
-                            if entry.verified is True
-                            else constants.NOT_VERIFIED_EMOJI,
-                        ]
+                    embed.add_field(
+                        name=f"Level {entry.level} - {entry.name}",
+                        value=(
+                            f"> Record: {utilities.display_record(entry.record)}\n"
+                        ),
+                        inline=False,
                     )
+
         else:
-            title = f"CODE: {map_code} LEVEL {level} - VERIFIED WORLD RECORD:\n"
+            title = f"{map_code} LEVEL {level} - VERIFIED WORLD RECORD:\n"
             async for entry in (
                 WorldRecords.find({"code": map_code, "level": level, "verified": True})
                 .sort("record", 1)
                 .limit(1)
             ):
-                post = 1
-                pt.field_names = ["Record", "Name", "Verified"]
-                pt.add_row(
-                    [
-                        utilities.display_record(entry.record),
-                        entry.name,
-                        constants.VERIFIED_EMOJI
-                        if entry.verified is True
-                        else constants.NOT_VERIFIED_EMOJI,
-                    ]
+                exists = True
+                embed = discord.Embed(title=f"{title}")
+                embed.add_field(
+                    name=f"{entry.name}",
+                    value=(
+                        f"> Record: {utilities.display_record(entry.record)}\n"
+                    ),
+                    inline=False,
                 )
                 url = entry.url
-        if post:
-            await ctx.send(f"{title}```\n{pt}```\n{url}")
+        if exists:
+            await ctx.send(f"{url}", embed=embed)
         else:
             await ctx.send(
                 f"No world record for {map_code}{' level ' + level if level else ''}!"
@@ -195,9 +161,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"CODE: {map_code} - LEVEL NAMES:\n"
         level_checker = set()
         async for entry in (
-            WorldRecords.find({"code": map_code})
-            .sort("record", 1)
-            .limit(30)
+            WorldRecords.find({"code": map_code}).sort("record", 1).limit(30)
         ):
             if entry.level not in level_checker:
                 level_checker.add(entry.level)

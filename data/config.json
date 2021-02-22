@@ -4,5 +4,4 @@
   "description": "Doomfist Parkour Community - Map submission & personal best bot.",
   "database": true,
   "case_insensitive": true,
-  "error_report_channel": 1
 }

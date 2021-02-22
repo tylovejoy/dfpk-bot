@@ -58,7 +58,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 level_checker.add(entry.level)
         embed.add_field(
             name="Currently submitted level names:",
-            value=f"{', '.join(level_checker) if level_checker else 'N/A'}"
+            value=f"{', '.join(level_checker) if level_checker else 'N/A'}",
         )
         if record_in_seconds:
             map_code = map_code.upper()
@@ -147,7 +147,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                         f"```\nCurrently submitted level names for {map_code}: "
                         + ", ".join(level_checker)
                         + "```",
-                        embed=embed
+                        embed=embed,
                     )
                     confirmed = await confirmation.confirm(ctx, msg)
 

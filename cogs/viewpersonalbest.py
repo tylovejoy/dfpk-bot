@@ -120,9 +120,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     level_checker.add(entry.level)
                     embed.add_field(
                         name=f"Level {entry.level} - {entry.name}",
-                        value=(
-                            f"> Record: {utilities.display_record(entry.record)}\n"
-                        ),
+                        value=(f"> Record: {utilities.display_record(entry.record)}\n"),
                         inline=False,
                     )
 
@@ -137,9 +135,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 embed = discord.Embed(title=f"{title}")
                 embed.add_field(
                     name=f"{entry.name}",
-                    value=(
-                        f"> Record: {utilities.display_record(entry.record)}\n"
-                    ),
+                    value=(f"> Record: {utilities.display_record(entry.record)}\n"),
                     inline=False,
                 )
                 url = entry.url
@@ -161,15 +157,15 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"CODE: {map_code} - LEVEL NAMES:\n"
         level_checker = set()
         async for entry in (
-            WorldRecords.find({"code": map_code})
-            .sort([("level", 1)])
-            .limit(30)
+            WorldRecords.find({"code": map_code}).sort([("level", 1)]).limit(30)
         ):
             if entry.level not in level_checker:
                 level_checker.add(entry.level)
         if level_checker:
             embed = discord.Embed(title=f"{map_code}")
-            embed.add_field(name="Currenly submitted levels:", value=f"{', '.join(level_checker)}")
+            embed.add_field(
+                name="Currenly submitted levels:", value=f"{', '.join(level_checker)}"
+            )
             await ctx.send(embed=embed)
         else:
             await ctx.send(f"No level names found for {map_code}!")

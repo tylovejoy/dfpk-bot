@@ -177,4 +177,3 @@ PRETTY_NAMES = {
     "workshopisland": "Workshop Island",
     "practicerange": "Practice Range",
 }
-

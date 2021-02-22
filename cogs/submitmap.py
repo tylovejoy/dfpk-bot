@@ -22,8 +22,7 @@ def map_name_converter(map_name):
     else:
         return False
 
-# TODO: Change the entire class to embeds
-# TODO: Add map code edit, and full edit
+
 class SubmitMap(commands.Cog, name="Map submission/deletion"):
     def __init__(self, bot):
         self.bot = bot

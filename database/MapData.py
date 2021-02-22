@@ -4,9 +4,6 @@ from umongo.fields import *
 from internal.database_init import instance
 import logging
 
-# TODO: Change code from _id to unique
-# TODO: Figure out how to edit current DB to reflect above change
-
 
 @instance.register
 class MapData(Document):

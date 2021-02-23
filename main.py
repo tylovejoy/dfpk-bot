@@ -11,7 +11,6 @@ from discord.ext import commands
 from internal.botclass import Bot
 from internal.intentcalculator import calculate_intents
 
-# from internal.keepalive import keep_alive
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

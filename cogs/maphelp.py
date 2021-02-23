@@ -39,7 +39,7 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
         brief="Shows map types for commands",
     )
     async def maptypes(self, ctx):
-        await ctx.send("Map types:\n```" + "\n".join(constants.TYPES_OF_MAP) + "```")
+        await ctx.send("Map types:\n```\n" + "\n".join(constants.TYPES_OF_MAP) + "```")
 
 
 def setup(bot):

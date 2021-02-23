@@ -63,6 +63,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     "Only letters A-Z and numbers 0-9 allowed in <map_code>. Map submission rejected."
                 )
                 return
+        map_name = map_name.lower()
         if not map_name_converter(map_name):
             await ctx.send(
                 "<map_name> doesn't exist! Map submission rejected. Use `/maps` for a list of acceptable maps."
@@ -78,7 +79,6 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 )
                 return
         map_code = map_code.upper()
-        map_name = map_name.lower()
         count = await MapData.count_documents({"code": map_code})
         if count == 0:
 

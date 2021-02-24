@@ -196,6 +196,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Search for the creator/details of a map. Enter <map_code> to find the details of that code.",
         brief="Search for the creator/details of a map",
+        aliases=["code"]
     )
     async def mapcode(self, ctx, map_code):
         code = map_code.upper()

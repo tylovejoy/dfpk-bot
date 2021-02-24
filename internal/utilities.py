@@ -62,5 +62,11 @@ def convert_short_types(map_type):
         return "MULTILEVEL"
     elif map_type in ["PIO", "PIONEER"]:
         return "PIONEER"
+    elif map_type in ["HC", "HARDCORE"]:
+        return "HARDCORE"
+    elif map_type in ["MC", "MILDCORE"]:
+        return "MILDCORE"
+    elif map_type in ["TA", "TIMEATTACK", "TIME-ATTACK"]:
+        return "TIME-ATTACK"
     else:
         return map_type

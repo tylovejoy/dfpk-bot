@@ -156,7 +156,9 @@ class MapSearch(commands.Cog, name="Map Search"):
     """
 
     @commands.command(
-        help="Lists most recent submitted maps", brief="", aliases=["new", "latest"]
+        help="Lists most recent submitted maps which are not labeled as NOSTALGIA.",
+        brief="Lists most recent submitted maps",
+        aliases=["new", "latest"],
     )
     async def newest(self, ctx):
         embed = discord.Embed(title="Newest Maps")
@@ -196,7 +198,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Search for the creator/details of a map. Enter <map_code> to find the details of that code.",
         brief="Search for the creator/details of a map",
-        aliases=["code"]
+        aliases=["code"],
     )
     async def mapcode(self, ctx, map_code):
         code = map_code.upper()

@@ -17,13 +17,16 @@ else:
 
 
 def normal_map_query(map_name, map_type=""):
+    apostrophe = "'"
     if map_type:
         return {
-            "map_name": f"{''.join(map_name.split()).lower()}",
+            "map_name": f"{''.join(map_name.split()).lower().replace(apostrophe, '').replace(':', '')}",
             "type": map_type.upper(),
         }
     else:
-        return {"map_name": f"{''.join(map_name.split()).lower()}"}
+        return {
+            "map_name": f"{''.join(map_name.split()).lower().replace(apostrophe, '').replace(':', '')}"
+        }
 
 
 class MapSearch(commands.Cog, name="Map Search"):

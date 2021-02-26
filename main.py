@@ -14,7 +14,7 @@ from internal.intentcalculator import calculate_intents
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        print("!!! !!! TEST MODE, USING TEST_CONSTANTS.PY FILE !!! !!!")
+        print("!!! !!! TEST MODE, USING TEST_CONSTANTS.PY FILE !!! !!!\n" * 10)
 
 
 def load_config():

@@ -144,9 +144,6 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                         inline=False,
                     )
                     msg = await ctx.send(
-                        f"```\nCurrently submitted level names for {map_code}: "
-                        + ", ".join(level_checker)
-                        + "```",
                         embed=embed,
                     )
                     confirmed = await confirmation.confirm(ctx, msg)

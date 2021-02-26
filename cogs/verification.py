@@ -39,23 +39,27 @@ class Verification(commands.Cog, name="Verification"):
                 hidden_channel = guild.get_channel(
                     constants.HIDDEN_VERIFICATION_CHANNEL
                 )
-                hidden_msg = await hidden_channel.fetch_message(search.hidden_id)
-                await hidden_msg.delete()
-                if str(payload.emoji) == constants.VERIFIED_EMOJI:
-                    search.verified = True
-                    await search.commit()
-                    await msg.author.send(
-                        f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
-                    )
+                try:
+                    hidden_msg = await hidden_channel.fetch_message(search.hidden_id)
+                    await hidden_msg.delete()
+                except:
+                    pass
+                finally:
+                    if str(payload.emoji) == constants.VERIFIED_EMOJI:
+                        search.verified = True
+                        await search.commit()
+                        await msg.author.send(
+                            f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
+                        )
 
-                elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
-                    search.verified = False
-                    await search.commit()
-                    await msg.author.send(
-                        f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
-                    )
+                    elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
+                        search.verified = False
+                        await search.commit()
+                        await msg.author.send(
+                            f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
+                        )
 
-                await msg.clear_reactions()
+                    await msg.clear_reactions()
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload=None):

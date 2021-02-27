@@ -4,6 +4,8 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 from pretty_help import PrettyHelp
+import logging
+logging.basicConfig(level=logging.INFO)
 
 
 class Bot(commands.Bot):
@@ -48,28 +50,26 @@ class Bot(commands.Bot):
             1
         )  # Ensure that on_ready has completed and finished printing
         cogs = [x.stem for x in Path("cogs").glob("*.py")]
+        logging.info("Loading extensions...\n")
         for extension in cogs:
             try:
                 self.load_extension(f"cogs.{extension}")
-                print(f"loaded {extension}")
+                logging.info(f"loaded {extension}")
             except Exception as e:
                 error = f"{extension}\n {type(e).__name__} : {e}"
-                print(f"failed to load extension {error}")
-            print("-" * 10)
+                logging.info(f"failed to load extension {error}")
         # self.load_extension('jishaku')
 
     async def on_ready(self):
         """
         This event is called every time the bot connects or resumes connection.
         """
-        print("-" * 10)
         self.app_info = await self.application_info()
-        print(
-            f"Logged in as: {self.user.name}\n"
+        logging.info(
+            f"\n\nLogged in as: {self.user.name}\n"
             f"Using discord.py version: {discord.__version__}\n"
-            f"Owner: {self.app_info.owner}"
+            f"Owner: {self.app_info.owner}\n\n"
         )
-        print("-" * 10)
 
     async def on_message(self, message):
         """

@@ -5,6 +5,7 @@ from internal import utilities
 from database.WorldRecords import WorldRecords
 import prettytable
 import sys
+from pymongo.collation import Collation
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -106,6 +107,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         pt = prettytable.PrettyTable()
         exists = False
         url = ""
+        embed = None
         if level == "":
             title = f"{map_code} - VERIFIED WORLD RECORDS:\n"
             level_checker = set()
@@ -113,6 +115,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             async for entry in (
                 WorldRecords.find({"code": map_code, "verified": True})
                 .sort([("level", 1), ("record", 1)])
+                .collation(Collation(locale="en_US", numericOrdering=True))
                 .limit(25)
             ):
                 if entry.level not in level_checker:
@@ -120,7 +123,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     level_checker.add(entry.level)
                     embed.add_field(
                         name=f"Level {entry.level} - {entry.name}",
-                        value=(f"> Record: {utilities.display_record(entry.record)}\n"),
+                        value=f"> Record: {utilities.display_record(entry.record)}\n",
                         inline=False,
                     )
 
@@ -135,7 +138,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 embed = discord.Embed(title=f"{title}")
                 embed.add_field(
                     name=f"{entry.name}",
-                    value=(f"> Record: {utilities.display_record(entry.record)}\n"),
+                    value=f"> Record: {utilities.display_record(entry.record)}\n",
                     inline=False,
                 )
                 url = entry.url

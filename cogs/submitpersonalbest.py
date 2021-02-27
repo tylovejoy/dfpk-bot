@@ -5,6 +5,7 @@ from internal import utilities, confirmation
 from database.WorldRecords import WorldRecords
 import prettytable
 import sys
+from pymongo.collation import Collation
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -49,13 +50,16 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 )
                 return
         record_in_seconds = utilities.time_convert(record)
-        level_checker = set()
+        level_checker = dict()
         embed = discord.Embed(title="Is this correct?")
         async for entry in (
-            WorldRecords.find({"code": map_code.upper()}).sort("record", 1).limit(30)
+            WorldRecords.find({"code": map_code.upper()})
+            .sort([("level", 1), ("record", 1)])
+            .collation(Collation(locale="en_US", numericOrdering=True))
+            .limit(30)
         ):
-            if entry.level not in level_checker:
-                level_checker.add(entry.level)
+            if entry.level not in level_checker.keys():
+                level_checker[entry.level] = None
         embed.add_field(
             name="Currently submitted level names:",
             value=f"{', '.join(level_checker) if level_checker else 'N/A'}",

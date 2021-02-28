@@ -50,7 +50,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 )
                 return
         record_in_seconds = utilities.time_convert(record)
-        level_checker = dict()
+        level_checker = {}
         embed = discord.Embed(title="Is this correct?")
         async for entry in (
             WorldRecords.find({"code": map_code.upper()})

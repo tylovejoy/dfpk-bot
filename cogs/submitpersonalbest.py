@@ -73,7 +73,11 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             # New DB entry for PB
             if (
                 await WorldRecords.count_documents(
-                    {"code": map_code, "level": re.compile(level, re.IGNORECASE), "posted_by": ctx.author.id}
+                    {
+                        "code": map_code,
+                        "level": re.compile(level, re.IGNORECASE),
+                        "posted_by": ctx.author.id,
+                    }
                 )
                 == 0
             ):
@@ -131,12 +135,20 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             # If there is already a personal best in DB
             elif (
                 await WorldRecords.count_documents(
-                    {"code": map_code, "level": re.compile(level, re.IGNORECASE), "posted_by": ctx.author.id}
+                    {
+                        "code": map_code,
+                        "level": re.compile(level, re.IGNORECASE),
+                        "posted_by": ctx.author.id,
+                    }
                 )
                 == 1
             ):
                 submission = await WorldRecords.find_one(
-                    {"code": map_code, "level": re.compile(level, re.IGNORECASE), "posted_by": ctx.author.id}
+                    {
+                        "code": map_code,
+                        "level": re.compile(level, re.IGNORECASE),
+                        "posted_by": ctx.author.id,
+                    }
                 )
                 # If new record is faster than old record
                 if record_in_seconds < submission.record:
@@ -200,7 +212,9 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     )
             if which_place:
                 update = (
-                    WorldRecords.find({"code": map_code, "level": re.compile(level, re.IGNORECASE)})
+                    WorldRecords.find(
+                        {"code": map_code, "level": re.compile(level, re.IGNORECASE)}
+                    )
                     .sort("record", 1)
                     .limit(10)
                 )
@@ -229,15 +243,25 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         level = level.upper()
         if (
             await WorldRecords.count_documents(
-                {"code": map_code, "level": re.compile(level, re.IGNORECASE), "name": name}
+                {
+                    "code": map_code,
+                    "level": re.compile(level, re.IGNORECASE),
+                    "name": name,
+                }
             )
             == 1
         ):
             search = await WorldRecords.find_one(
-                {"code": map_code, "level": re.compile(level, re.IGNORECASE), "name": name}
+                {
+                    "code": map_code,
+                    "level": re.compile(level, re.IGNORECASE),
+                    "name": name,
+                }
             )
 
-            if search.posted_by == ctx.author.id or bool(any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)):
+            if search.posted_by == ctx.author.id or bool(
+                any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
+            ):
                 embed = discord.Embed(title="Do you want to delete this?")
                 embed.add_field(
                     name=f"Name: {search.name}",

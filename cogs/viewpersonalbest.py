@@ -57,7 +57,11 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             name = ctx.author.name
         map_code = map_code.upper()
         level = level.upper()
-        query = {"code": map_code, "name": name, "level": re.compile(level, re.IGNORECASE)}
+        query = {
+            "code": map_code,
+            "name": name,
+            "level": re.compile(level, re.IGNORECASE),
+        }
         if await WorldRecords.count_documents(query) == 1:
             search = await WorldRecords.find_one(query)
             embed = discord.Embed(title=f"Personal best for {search.name}")
@@ -81,9 +85,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     )
     async def scoreboard(self, ctx, map_code, level):
         map_code = map_code.upper()
-        title = (
-            f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
-        )
+        title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
         query = {"code": map_code, "level": re.compile(level, re.IGNORECASE)}
         await boards(ctx, map_code, level, title, query)
 
@@ -96,7 +98,11 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     async def leaderboard(self, ctx, map_code, level):
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"
-        query = {"code": map_code, "level": re.compile(level, re.IGNORECASE), "verified": True}
+        query = {
+            "code": map_code,
+            "level": re.compile(level, re.IGNORECASE),
+            "verified": True,
+        }
         await boards(ctx, map_code, level.upper(), title, query)
 
     # view world record
@@ -133,7 +139,13 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         else:
             title = f"{map_code} - LEVEL {level.upper()} - VERIFIED WORLD RECORD:\n"
             async for entry in (
-                WorldRecords.find({"code": map_code, "level": re.compile(level, re.IGNORECASE), "verified": True})
+                WorldRecords.find(
+                    {
+                        "code": map_code,
+                        "level": re.compile(level, re.IGNORECASE),
+                        "verified": True,
+                    }
+                )
                 .sort("record", 1)
                 .limit(1)
             ):
@@ -163,8 +175,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"{map_code} - LEVEL NAMES:\n"
         level_checker = {}
         async for entry in (
-            WorldRecords
-            .find({"code": map_code})
+            WorldRecords.find({"code": map_code})
             .sort([("level", 1)])
             .collation(Collation(locale="en_US", numericOrdering=True))
             .limit(30)

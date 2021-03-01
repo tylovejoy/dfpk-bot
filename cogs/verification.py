@@ -24,7 +24,9 @@ class Verification(commands.Cog, name="Verification"):
     async def on_raw_reaction_add(self, payload=None):
         if payload.user_id == constants.BOT_ID:
             return
-        if not bool(any(role.id in constants.ROLE_WHITELIST for role in payload.member.roles)):
+        if not bool(
+            any(role.id in constants.ROLE_WHITELIST for role in payload.member.roles)
+        ):
             return
         if payload is not None:
             search = await WorldRecords.find_one({"message_id": payload.message_id})

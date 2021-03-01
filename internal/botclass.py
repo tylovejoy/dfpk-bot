@@ -40,9 +40,7 @@ class Bot(commands.Bot):
                 logging.info(f"failed to load extension {error}")
 
     async def on_ready(self):
-        """
-
-        """
+        """"""
         self.app_info = await self.application_info()
         logging.info(
             f"\n\nLogged in as: {self.user.name}\n"

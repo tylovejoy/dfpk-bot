@@ -2,7 +2,6 @@ import re
 import sys
 
 import discord
-import prettytable
 from discord.ext import commands
 from pymongo.collation import Collation
 

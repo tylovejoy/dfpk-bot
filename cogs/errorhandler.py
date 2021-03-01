@@ -11,9 +11,7 @@ class ErrorHandler(commands.Cog):
 
     @staticmethod
     def _format_traceback(error, maxlength):
-        """
-        Formats a traceback, with the option to cut it at a max length.
-        """
+        """Formats a traceback, with the option to cut it at a max length."""
         v = ""
 
         for line in traceback.format_tb(error.__traceback__):

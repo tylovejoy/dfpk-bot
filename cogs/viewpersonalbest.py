@@ -16,9 +16,7 @@ else:
 
 
 async def boards(ctx, map_code, level, title, query):
-    """
-    Displays boards for scoreboard and leaderboard commands
-    """
+    """Displays boards for scoreboard and leaderboard commands."""
     count = 1
     exists = False
     embed = discord.Embed(title=f"{title}")

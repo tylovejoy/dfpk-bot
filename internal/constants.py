@@ -1,6 +1,5 @@
-"""
-Constants for bot use.
-"""
+"""Constants for bot use."""
+
 # Customize the following
 
 TYPES_OF_MAP = [

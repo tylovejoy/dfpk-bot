@@ -9,7 +9,8 @@ class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def _format_traceback(self, error, maxlength):
+    @staticmethod
+    def _format_traceback(error, maxlength):
         """
         Formats a traceback, with the option to cut it at a max length.
         """

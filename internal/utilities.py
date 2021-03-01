@@ -1,6 +1,5 @@
 import datetime
 import re
-import prettytable
 
 
 def is_english(s):

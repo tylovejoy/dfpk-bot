@@ -1,9 +1,10 @@
 import asyncio
+import logging
 from pathlib import Path
+
 import discord
 from discord.ext import commands
 from pretty_help import PrettyHelp
-import logging
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)

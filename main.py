@@ -1,16 +1,10 @@
-import os
-import sys
 import asyncio
 import json
 import logging
-from pathlib import Path
-
-import discord
-from discord.ext import commands
+import os
+import sys
 
 from internal.botclass import Bot
-
-
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

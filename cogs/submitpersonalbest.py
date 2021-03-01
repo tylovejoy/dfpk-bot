@@ -1,12 +1,12 @@
+import re
+import sys
+
 import discord
 from discord.ext import commands
-import asyncio
-from internal import utilities, confirmation
-from database.WorldRecords import WorldRecords
-import prettytable
-import sys
 from pymongo.collation import Collation
-import re
+
+from database.WorldRecords import WorldRecords
+from internal import utilities, confirmation
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

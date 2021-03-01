@@ -1,7 +1,8 @@
-from flask import Flask
-from threading import Thread
-from gevent.pywsgi import WSGIServer
 import os
+from threading import Thread
+
+from flask import Flask
+from gevent.pywsgi import WSGIServer
 
 app = Flask(__name__)
 

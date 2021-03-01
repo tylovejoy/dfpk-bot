@@ -1,12 +1,10 @@
+import sys
+
 import discord
 from discord.ext import commands
-import asyncio
-from internal import confirmation, utilities
+
 from database.MapData import MapData
-from mongosanitizer.sanitizer import sanitize
-import prettytable
-from textwrap import fill
-import sys
+from internal import confirmation, utilities
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

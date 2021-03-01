@@ -1,8 +1,7 @@
-from umongo import Document, validate
+from umongo import Document
 from umongo.fields import *
 
 from internal.database_init import instance
-import logging
 
 
 @instance.register

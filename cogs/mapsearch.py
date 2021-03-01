@@ -1,12 +1,11 @@
+import asyncio
+import re
+import sys
+
 import discord
 from discord.ext import commands
-import asyncio
-import sys
+
 from database.MapData import MapData
-import re
-import prettytable
-from math import ceil
-from textwrap import fill
 from internal import utilities
 
 if len(sys.argv) > 1:

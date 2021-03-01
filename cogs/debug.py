@@ -4,6 +4,9 @@ from jishaku.metacog import GroupCogMeta
 
 
 class Debugging(JishakuBase, metaclass=GroupCogMeta, command_parent=jsk):
+    """
+    Adds default Jishaku debugging as a cog.
+    """
     pass
 
 

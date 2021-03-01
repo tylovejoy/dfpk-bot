@@ -1,6 +1,8 @@
 import datetime
 import re
 
+from internal import constants
+
 
 def is_english(s):
     return s.isascii()
@@ -62,3 +64,10 @@ def convert_short_types(map_type):
         return "TIME-ATTACK"
     else:
         return map_type
+
+
+def map_name_converter(map_name):
+    for i in range(len(constants.ALL_MAP_NAMES)):
+        if map_name in constants.ALL_MAP_NAMES[i]:
+            return constants.ALL_MAP_NAMES[i][0]
+    return

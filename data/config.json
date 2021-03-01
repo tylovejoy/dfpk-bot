@@ -1,6 +1,5 @@
 ﻿{
   "prefix": "/",
   "description": "Doomfist Parkour Community - Map submission & personal best bot.",
-  "database": true,
   "case_insensitive": true
 }

@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 
+from internal import database_init
 from internal.botclass import Bot
 
 if len(sys.argv) > 1:
@@ -54,21 +55,17 @@ async def run():
 
     config = load_config()
 
-    if config.get("database") is True:
-
-        from internal import database_init
-
-        database_init.init(
-            get_config_var(
-                "MONGO_CONNECTION_STRING", config, "mongoConnectionString", error=True
-            ),
-            get_config_var(
-                "MONGO_DATABASE_NAME",
-                config,
-                "mongoDbName",
-                fallback="dpytemplate_default_db",
-            ),
-        )
+    database_init.init(
+        get_config_var(
+            "MONGO_CONNECTION_STRING", config, "mongoConnectionString", error=True
+        ),
+        get_config_var(
+            "MONGO_DATABASE_NAME",
+            config,
+            "mongoDbName",
+            fallback="dpytemplate_default_db",
+        ),
+    )
 
     bot = Bot(
         config=config,

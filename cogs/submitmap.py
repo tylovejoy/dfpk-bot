@@ -13,18 +13,13 @@ else:
     from internal import constants
 
 
-def map_name_converter(map_name):
-    for i in range(len(constants.ALL_MAP_NAMES)):
-        if map_name in constants.ALL_MAP_NAMES[i]:
-            return constants.ALL_MAP_NAMES[i][0]
-    return
-
-
 class SubmitMap(commands.Cog, name="Map submission/deletion"):
+    """Commands to submit and delete maps."""
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_check(self, ctx):
+        """Checks if command is used in MAP_SUBMIT_CHANNEL"""
         if ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID:
             return True
 
@@ -39,6 +34,21 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Submit map code",
     )
     async def submitmap(self, ctx, map_code, map_name, map_type, creator, *, desc=""):
+        """Submits a map to database.
+
+        Args:
+            ctx: bot Context
+            map_code (str):
+            map_name (str):
+            map_type (str):
+            creator (str):
+            desc (str):
+
+        Returns:
+
+        """
+        # A hack to avoid mongoDB injection...
+        # TODO: Proper sanitization
         if (
             "$" in map_code
             or "$" in map_name
@@ -51,6 +61,8 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
             map_type.replace("$", "")
             creator.replace("$", "")
             desc.replace("$", "")
+        # Checks for a-zA-Z0-9 in map_code
+        # TODO: Change to regex?
         for x in map_code:
             if (
                 x
@@ -61,25 +73,32 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 )
                 return
         map_name = map_name.lower()
-        if not map_name_converter(map_name):
+        if not utilities.map_name_converter(map_name):
             await ctx.send(
                 "<map_name> doesn't exist! Map submission rejected. Use `/maps` for a list of acceptable maps."
             )
             return
 
+        # Splits submitted map_types into a list, converts shortened versions
+        # Example:
+        #          multi -> multilevel
+        #          pio   -> pioneer
         map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
 
+    # Checks map_type(s) exists
         for x in map_type:
             if x not in constants.TYPES_OF_MAP:
                 await ctx.send(
                     "<map_type> doesn't exist! Map submission rejected. Use `/maptypes` for a list of acceptable map types."
                 )
                 return
+
         map_code = map_code.upper()
         count = await MapData.count_documents({"code": map_code})
-        if count == 0:
 
-            new_map_name = map_name_converter(map_name)
+        # Create submission, if none exists.
+        if count == 0:
+            new_map_name = utilities.map_name_converter(map_name)
             submission = MapData(
                 **dict(
                     code=map_code,
@@ -105,6 +124,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
             msg = await ctx.send(embed=embed)
             confirmed = await confirmation.confirm(ctx, msg)
 
+            # User confirmation with reactions
             if confirmed is True:
                 await msg.edit(
                     content=f"{constants.CONFIRM_REACTION_EMOJI} Confirmed! Map submission accepted."
@@ -128,9 +148,13 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Delete map code",
     )
     async def deletemap(self, ctx, map_code):
+        """Deletes a specific map_code."""
         map_code = map_code.upper()
+
+        # If exists
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
+            # Only allow original poster OR whitelisted roles to delete.
             if search.posted_by == ctx.author.id or bool(
                 any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
             ):
@@ -145,8 +169,11 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     ),
                     inline=False,
                 )
+
                 msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
+
+                # User confirmation using reactions
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been deleted.")
                     await search.delete()
@@ -168,12 +195,18 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Edit description for a certain map code",
     )
     async def editdesc(self, ctx, map_code, *, desc):
+        """Edits a specific map_code's description."""
+        # TODO: Proper sanitization
         if "$" in map_code or "$" in desc:
             map_code.replace("$", "")
             desc.replace("$", "")
+
         map_code = map_code.upper()
+
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
+
+            # Only allow original poster OR whitelisted roles to delete.
             if search.posted_by == ctx.author.id or bool(
                 any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
             ):
@@ -190,8 +223,10 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     ),
                     inline=False,
                 )
+
                 msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
+
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been edited.")
                     await search.commit()
@@ -208,19 +243,26 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Edit map types for a certain map code",
     )
     async def edittypes(self, ctx, map_code, *, map_type):
+        """Edits a specific map_code's map_types."""
+        # TODO: Proper sanitization
         if "$" in map_code or "$" in map_type:
             map_code.replace("$", "")
             map_type.replace("$", "")
+
         map_code = map_code.upper()
         map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
+
         for x in map_type:
             if x not in constants.TYPES_OF_MAP:
                 await ctx.send(
                     "<map_type> doesn't exist! Map submission rejected. Use `/maptypes` for a list of acceptable map types."
                 )
                 return
+
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
+
+            # Only allow original poster OR whitelisted roles to delete.
             if search.posted_by == ctx.author.id or bool(
                 any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
             ):
@@ -237,8 +279,10 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     ),
                     inline=False,
                 )
+
                 msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
+
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been edited.")
                     await search.commit()
@@ -255,13 +299,19 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Edit the map code for a certain map code",
     )
     async def editcode(self, ctx, map_code, new_map_code):
+        """Edits a specific map_code's map_code."""
+        # TODO: Proper sanitization
         if "$" in map_code or "$" in new_map_code:
             map_code.replace("$", "")
             new_map_code.replace("$", "")
+
         map_code = map_code.upper()
         new_map_code = new_map_code.upper()
+
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
+
+            # Only allow original poster OR whitelisted roles to delete.
             if search.posted_by == ctx.author.id or bool(
                 any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
             ):
@@ -278,8 +328,10 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     ),
                     inline=False,
                 )
+
                 msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
+
                 if confirmed is True:
                     await msg.edit(content=f"{search.code} has been edited.")
                     await search.commit()

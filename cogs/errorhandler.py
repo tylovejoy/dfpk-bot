@@ -55,8 +55,10 @@ class ErrorHandler(commands.Cog):
         except:
             pass
 
-    # Extend this dict with your custom errors. Put the error class as key and the message you want to send as value.
-    # The message can be formatted with the context referred as "ctx" and the error object as "err".
+    # Extend this dict with your custom errors.
+    # Put the error class as key and the message you want to send as value.
+    # The message can be formatted with the context referred as "ctx"
+    # and the error object as "err".
     # For more info on formatting, read https://pyformat.info/
     _error_messages = {
         commands.NoPrivateMessage: "This command cannot be used in private messages",
@@ -112,7 +114,7 @@ class ErrorHandler(commands.Cog):
 
             formatted_traceback = self._format_traceback(
                 error, 2042
-            )  # Embed desc limit is 2048 characters, which includes the codeblock markers
+            )  # Embed desc limit is 2048 characters
 
             embed.description = f"```{formatted_traceback}```"
 

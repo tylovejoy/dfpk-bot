@@ -119,9 +119,7 @@ class MapSearch(commands.Cog, name="Map Search"):
                 reaction, user = await self.bot.wait_for(
                     "reaction_add", timeout=60, check=check
                 )
-                # waiting for a reaction to be added - times out after x seconds, 60 in this
-                # example
-
+                # waits for reaction - times out after 60
                 if (
                     str(reaction.emoji) == constants.RIGHT_REACTION_EMOJI
                     and cur_page != total_pages
@@ -593,7 +591,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     """
-    Workshop maps / Practice Range 
+    Workshop maps / Practice Range
     """
 
     @commands.command(

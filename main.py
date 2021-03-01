@@ -31,13 +31,17 @@ def load_config():
 
 async def run():
     """
-    Where the bot gets started. If you wanted to create an database connection pool or other session for the bot to use,
+    Where the bot gets started.
+    If you wanted to create an database connection pool
+    or other session for the bot to use,
     it's recommended that you create it here and pass it to the bot as a kwarg.
     """
 
     def get_config_var(env_name, config_path, config_name, **kwargs):
         """
-        Attempts to get a variable from the env file, then from the config key, and finally, if none found, returns the fallback value.
+        Attempts to get a variable from the env file,
+        then from the config key, and finally,
+        if none found, returns the fallback value.
         """
         v = os.getenv(env_name, config_path.get(config_name, kwargs.get("fallback")))
 

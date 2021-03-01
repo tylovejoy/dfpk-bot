@@ -26,7 +26,6 @@ def load_config():
     load_dotenv(dotenv_path)
 
     with open("data/config.json", "r", encoding="utf-8-sig") as doc:
-        #  Please make sure encoding is correct, especially after editing the config file
         return json.load(doc)
 
 

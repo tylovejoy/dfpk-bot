@@ -39,6 +39,7 @@ def normal_map_query(map_name, map_type=""):
 
 class MapSearch(commands.Cog, name="Map Search"):
     """A collection of map search commands."""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -152,7 +153,7 @@ class MapSearch(commands.Cog, name="Map Search"):
                 constants.LEFT_REACTION_EMOJI,
                 constants.RIGHT_REACTION_EMOJI,
             ]
-            # This makes sure nobody except the command sender can interact with the "menu"
+            # Only command author can interact with menu
 
         while True:
             try:

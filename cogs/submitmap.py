@@ -15,6 +15,7 @@ else:
 
 class SubmitMap(commands.Cog, name="Map submission/deletion"):
     """Commands to submit and delete maps."""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -85,7 +86,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         #          pio   -> pioneer
         map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
 
-    # Checks map_type(s) exists
+        # Checks map_type(s) exists
         for x in map_type:
             if x not in constants.TYPES_OF_MAP:
                 await ctx.send(

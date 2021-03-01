@@ -14,6 +14,7 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
 
     Shows user acceptable map names and map types to use with other commands.
     """
+
     def __init__(self, bot):
         self.bot = bot
 

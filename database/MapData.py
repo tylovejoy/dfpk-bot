@@ -1,5 +1,5 @@
 from umongo import Document
-from umongo.fields import *
+from umongo.fields import StringField, IntegerField, ListField
 
 from internal.database_init import instance
 

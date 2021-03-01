@@ -3,15 +3,6 @@ import re
 import prettytable
 
 
-def split_posts(post):
-    groups = post.split("\n")
-    split_groups = []
-    while len(groups):
-        split_groups.append("\n".join(groups[:15]))
-        groups = groups[15:]
-    return split_groups
-
-
 def is_english(s):
     return s.isascii()
 

@@ -14,8 +14,7 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
 
     async def cog_check(self, ctx):
         if (
-            ctx.channel.id == constants.MAP_CHANNEL_ID
-            or ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID
+            ctx.channel.id in (constants.MAP_CHANNEL_ID, constants.MAP_SUBMIT_CHANNEL_ID)
         ):
             return True
 

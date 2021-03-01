@@ -80,7 +80,7 @@ async def run():
         await bot.start(token)
     except KeyboardInterrupt:
         await bot.logout()
-        exit()
+        sys.exit()
 
 
 if __name__ == "__main__":

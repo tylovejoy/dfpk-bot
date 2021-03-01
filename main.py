@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from internal.botclass import Bot
-from internal.intentcalculator import calculate_intents
+
 
 
 if len(sys.argv) > 1:
@@ -55,7 +55,6 @@ async def run():
         return v
 
     config = load_config()
-    intents = calculate_intents(config.get("intents", []))
 
     if config.get("database") is True:
 
@@ -75,18 +74,14 @@ async def run():
 
     bot = Bot(
         config=config,
+        prefix=config["prefix"],
         description=config["description"],
-        intents=intents,
         case_insensitive=config["case_insensitive"],
     )
 
     bot.config = config
 
     try:
-        # Start the keepalive endpoint
-        # if os.getenv('KEEP_ALIVE'):
-        #   keep_alive()
-
         token = get_config_var("BOT_TOKEN", config, "token", error=True)
         await bot.start(token)
     except KeyboardInterrupt:

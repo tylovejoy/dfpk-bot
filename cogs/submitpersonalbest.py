@@ -6,6 +6,7 @@ from database.WorldRecords import WorldRecords
 import prettytable
 import sys
 from pymongo.collation import Collation
+import re
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -49,8 +50,9 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     "Only letters A-Z and numbers 0-9 allowed in <map_code>. Map submission rejected."
                 )
                 return
+        level = level.upper()
         record_in_seconds = utilities.time_convert(record)
-        level_checker = dict()
+        level_checker = {}
         embed = discord.Embed(title="Is this correct?")
         async for entry in (
             WorldRecords.find({"code": map_code.upper()})
@@ -58,8 +60,8 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             .collation(Collation(locale="en_US", numericOrdering=True))
             .limit(30)
         ):
-            if entry.level not in level_checker.keys():
-                level_checker[entry.level] = None
+            if entry.level.upper() not in level_checker.keys():
+                level_checker[entry.level.upper()] = None
         embed.add_field(
             name="Currently submitted level names:",
             value=f"{', '.join(level_checker) if level_checker else 'N/A'}",
@@ -71,7 +73,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             # New DB entry for PB
             if (
                 await WorldRecords.count_documents(
-                    {"code": map_code, "level": level, "posted_by": ctx.author.id}
+                    {"code": map_code, "level": re.compile(level, re.IGNORECASE), "posted_by": ctx.author.id}
                 )
                 == 0
             ):
@@ -80,7 +82,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                         code=map_code,
                         name=ctx.author.name,
                         record=record_in_seconds,
-                        level=level,
+                        level=level.upper(),
                         posted_by=ctx.author.id,
                         message_id=ctx.message.id,
                         url=ctx.message.jump_url,
@@ -91,7 +93,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     name=f"Name: {submission.name}",
                     value=(
                         f"> Code: {submission.code}\n"
-                        f"> Level: {submission.level}\n"
+                        f"> Level: {submission.level.upper()}\n"
                         f"> Record: {utilities.display_record(record_in_seconds)}\n"
                     ),
                     inline=False,
@@ -129,12 +131,12 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             # If there is already a personal best in DB
             elif (
                 await WorldRecords.count_documents(
-                    {"code": map_code, "level": level, "posted_by": ctx.author.id}
+                    {"code": map_code, "level": re.compile(level, re.IGNORECASE), "posted_by": ctx.author.id}
                 )
                 == 1
             ):
                 submission = await WorldRecords.find_one(
-                    {"code": map_code, "level": level, "posted_by": ctx.author.id}
+                    {"code": map_code, "level": re.compile(level, re.IGNORECASE), "posted_by": ctx.author.id}
                 )
                 # If new record is faster than old record
                 if record_in_seconds < submission.record:
@@ -142,7 +144,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                         name=f"Name: {submission.name}",
                         value=(
                             f"> Code: {submission.code}\n"
-                            f"> Level: {submission.level}\n"
+                            f"> Level: {submission.level.upper()}\n"
                             f"> Record: {utilities.display_record(record_in_seconds)}\n"
                         ),
                         inline=False,
@@ -198,7 +200,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     )
             if which_place:
                 update = (
-                    WorldRecords.find({"code": map_code, "level": level})
+                    WorldRecords.find({"code": map_code, "level": re.compile(level, re.IGNORECASE)})
                     .sort("record", 1)
                     .limit(10)
                 )
@@ -224,14 +226,15 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         map_code = map_code.upper()
         if name == "":
             name = ctx.author.name
+        level = level.upper()
         if (
             await WorldRecords.count_documents(
-                {"code": map_code, "level": level, "name": name}
+                {"code": map_code, "level": re.compile(level, re.IGNORECASE), "name": name}
             )
             == 1
         ):
             search = await WorldRecords.find_one(
-                {"code": map_code, "level": level, "name": name}
+                {"code": map_code, "level": re.compile(level, re.IGNORECASE), "name": name}
             )
 
             if search.posted_by == ctx.author.id or (
@@ -244,7 +247,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     name=f"Name: {search.name}",
                     value=(
                         f"> Code: {search.code}\n"
-                        f"> Level: {search.level}\n"
+                        f"> Level: {search.level.upper()}\n"
                         f"> Record: {utilities.display_record(search.record)}\n"
                     ),
                     inline=False,

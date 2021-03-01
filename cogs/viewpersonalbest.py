@@ -23,7 +23,7 @@ async def boards(ctx, map_code, level, title, query):
     count = 1
     exists = False
     embed = discord.Embed(title=f"{title}")
-    async for entry in (WorldRecords.find(query).sort("record", 1).limit(10)):
+    async for entry in WorldRecords.find(query).sort("record", 1).limit(10):
         exists = True
         embed.add_field(
             name=f"#{count} - {entry.name}",

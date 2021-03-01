@@ -17,6 +17,7 @@ def map_name_converter(map_name):
     for i in range(len(constants.ALL_MAP_NAMES)):
         if map_name in constants.ALL_MAP_NAMES[i]:
             return constants.ALL_MAP_NAMES[i][0]
+    return
 
 
 class SubmitMap(commands.Cog, name="Map submission/deletion"):

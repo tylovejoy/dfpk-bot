@@ -26,6 +26,7 @@ def date_func(s):
         return datetime.datetime.strptime(s, "%H:%M:%S.%f").time()
     elif s.count(":") == 2 and s.count(".") == 0:
         return datetime.datetime.strptime(s, "%H:%M:%S").time()
+    return
 
 
 def time_convert(time_input):
@@ -38,6 +39,7 @@ def time_convert(time_input):
         return float(
             (int(time_list[0]) * 3600) + (int(time_list[1]) * 60) + float(time_list[2])
         )
+    return
 
 
 def display_record(record):

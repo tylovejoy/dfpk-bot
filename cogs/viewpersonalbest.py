@@ -113,7 +113,6 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     )
     async def worldrecord(self, ctx, map_code, level=""):
         map_code = map_code.upper()
-        pt = prettytable.PrettyTable()
         exists = False
         url = ""
         embed = None
@@ -183,7 +182,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             if entry.level.upper() not in level_checker.keys():
                 level_checker[entry.level.upper()] = None
         if level_checker:
-            embed = discord.Embed(title=f"{map_code}")
+            embed = discord.Embed(title=f"{title}")
             embed.add_field(
                 name="Currenly submitted levels:", value=f"{', '.join(level_checker)}"
             )

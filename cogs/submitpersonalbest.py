@@ -237,11 +237,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 {"code": map_code, "level": re.compile(level, re.IGNORECASE), "name": name}
             )
 
-            if search.posted_by == ctx.author.id or (
-                True
-                if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
-                else False
-            ):
+            if search.posted_by == ctx.author.id or bool(any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)):
                 embed = discord.Embed(title="Do you want to delete this?")
                 embed.add_field(
                     name=f"Name: {search.name}",

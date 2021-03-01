@@ -130,11 +130,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         map_code = map_code.upper()
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
-            if search.posted_by == ctx.author.id or (
-                True
-                if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
-                else False
-            ):
+            if search.posted_by == ctx.author.id or bool(any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)):
                 embed = discord.Embed(title="Do you want to delete this?")
                 embed.add_field(
                     name=f"{search.code}",
@@ -175,11 +171,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         map_code = map_code.upper()
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
-            if search.posted_by == ctx.author.id or (
-                True
-                if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
-                else False
-            ):
+            if search.posted_by == ctx.author.id or bool(any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)):
                 search.desc = desc
                 embed = discord.Embed(title="Is this submission correct?")
 
@@ -224,11 +216,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 return
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
-            if search.posted_by == ctx.author.id or (
-                True
-                if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
-                else False
-            ):
+            if search.posted_by == ctx.author.id or bool(any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)):
                 search.type = map_type
                 embed = discord.Embed(title="Is this submission correct?")
 
@@ -267,11 +255,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         new_map_code = new_map_code.upper()
         if await MapData.count_documents({"code": map_code}) == 1:
             search = await MapData.find_one({"code": map_code})
-            if search.posted_by == ctx.author.id or (
-                True
-                if any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
-                else False
-            ):
+            if search.posted_by == ctx.author.id or bool(any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)):
                 search.code = new_map_code
                 embed = discord.Embed(title="Is this submission correct?")
 

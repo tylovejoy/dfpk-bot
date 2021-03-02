@@ -110,7 +110,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
                 if confirmed is True:
                     await msg.edit(
-                        content=f"Submission accepted",
+                        content="Submission accepted",
                     )
 
                     channel = self.bot.get_channel(
@@ -127,11 +127,11 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     which_place = True
                 elif confirmed is False:
                     await msg.edit(
-                        content=f"Submission has not been accepted.",
+                        content="Submission has not been accepted.",
                     )
                 elif confirmed is None:
                     await msg.edit(
-                        content=f"Submission timed out! Submission has not been accepted.",
+                        content="Submission timed out! Submission has not been accepted.",
                     )
 
             # If there is already a personal best in DB
@@ -202,10 +202,10 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                             await ctx.message.add_reaction(constants.NOT_VERIFIED_EMOJI)
                             which_place = True
                     elif confirmed is False:
-                        await msg.edit(content=f"Submission has not been accepted.")
+                        await msg.edit(content="Submission has not been accepted.")
                     elif confirmed is None:
                         await msg.edit(
-                            content=f"Submission timed out! Submission has not been accepted."
+                            content="Submission timed out! Submission has not been accepted."
                         )
 
                 else:
@@ -279,13 +279,13 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 msg = await ctx.send(embed=embed)
                 confirmed = await confirmation.confirm(ctx, msg)
                 if confirmed is True:
-                    await msg.edit(content=f"Personal best deleted succesfully.")
+                    await msg.edit(content="Personal best deleted succesfully.")
                     await search.delete()
                 elif confirmed is False:
-                    await msg.edit(content=f"Personal best was not deleted.")
+                    await msg.edit(content="Personal best was not deleted.")
                 elif confirmed is None:
                     await msg.edit(
-                        content=f"Deletion timed out! Personal best has not been deleted."
+                        content="Deletion timed out! Personal best has not been deleted."
                     )
 
             else:

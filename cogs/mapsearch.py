@@ -219,7 +219,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         if row:
             await ctx.send(embed=embed)
         else:
-            await ctx.send(f"No latest maps!")
+            await ctx.send("No latest maps!")
 
     @commands.command(
         help="Search for maps by a specific creator.\n<creator> is not case-sensitive and can contain a portion of a name.",

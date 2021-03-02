@@ -137,7 +137,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                 )
             elif confirmed is None:
                 await msg.edit(
-                    content=f"Submission timed out! Map submission rejected."
+                    content="Submission timed out! Map submission rejected."
                 )
 
         else:

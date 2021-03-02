@@ -6,6 +6,7 @@ from discord.ext import commands
 
 
 class ErrorHandler(commands.Cog):
+    """Custom error handling for Discord bot."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -74,7 +75,6 @@ class ErrorHandler(commands.Cog):
         """Handle any error that could happen in a command.
         Includes uncaught stuff which is sent and reported.
         """
-
         classname = error.__class__
 
         if classname in self._error_messages.keys():

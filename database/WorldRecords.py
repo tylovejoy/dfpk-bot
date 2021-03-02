@@ -19,4 +19,5 @@ class WorldRecords(Document):
     hidden_id = IntegerField(required=True)
 
     class Meta:
+        """MongoDb database collection name."""
         collection_name = "WorldRecords"

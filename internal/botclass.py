@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class Bot(commands.Bot):
+    """Discord Bot."""
     def __init__(self, **kwargs):
         """Initialize Bot."""
         super().__init__(

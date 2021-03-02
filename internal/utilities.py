@@ -27,8 +27,7 @@ def display_record(record):
     """Display record in HH:MM:SS.SS format."""
     if str(datetime.timedelta(seconds=record)).count(".") == 1:
         return str(datetime.timedelta(seconds=record))[: -4 or None]
-    else:
-        return str(datetime.timedelta(seconds=record)) + ".00"
+    return str(datetime.timedelta(seconds=record)) + ".00"
 
 
 def convert_short_types(map_type):
@@ -43,8 +42,7 @@ def convert_short_types(map_type):
         return "MILDCORE"
     elif map_type in ["TA", "TIMEATTACK", "TIME-ATTACK"]:
         return "TIME-ATTACK"
-    else:
-        return map_type
+    return map_type
 
 
 def map_name_converter(map_name):

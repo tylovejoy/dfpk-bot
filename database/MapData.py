@@ -16,4 +16,5 @@ class MapData(Document):
     desc = StringField()
 
     class Meta:
+        """MongoDb database collection name."""
         collection_name = "MapData"

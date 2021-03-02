@@ -13,6 +13,7 @@ else:
 
 
 class Verification(commands.Cog, name="Verification"):
+    """Listeners to delete or verify personal bests."""
     def __init__(self, bot):
         self.bot = bot
 

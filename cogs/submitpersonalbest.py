@@ -16,6 +16,7 @@ else:
 
 
 class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion"):
+    """Commands to submit and delete personal bests."""
     def __init__(self, bot):
         self.bot = bot
 

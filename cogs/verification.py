@@ -17,12 +17,13 @@ class Verification(commands.Cog, name="Verification"):
         self.bot = bot
 
     async def cog_check(self, ctx):
+        """Check if channel is RECORD_CHANNEL."""
         if ctx.channel.id == constants.RECORD_CHANNEL_ID:
             return True
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload=None):
-        """Listens for verification reaction from moderators."""
+        """Listen for verification reaction from moderators."""
         if payload.user_id == constants.BOT_ID:
             return
         if not bool(
@@ -62,7 +63,7 @@ class Verification(commands.Cog, name="Verification"):
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload=None):
-        """Listens for deleted messages.
+        """Listen for deleted messages.
 
         If a deleted message was a personal best,
         the record is deleted from the database.
@@ -83,5 +84,5 @@ class Verification(commands.Cog, name="Verification"):
 
 
 def setup(bot):
-    """Adds Cog to Discord bot."""
+    """Add Cog to Discord bot."""
     bot.add_cog(Verification(bot))

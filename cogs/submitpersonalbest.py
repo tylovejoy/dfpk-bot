@@ -20,7 +20,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """Checks if channel is RECORD_CHANNEL"""
+        """Check if channel is RECORD_CHANNEL"""
         if ctx.channel.id == constants.RECORD_CHANNEL_ID:
             return True
 
@@ -37,7 +37,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         brief="Submit personal best",
     )
     async def submitpb(self, ctx, map_code, level, record):
-        """Submits personal best to database."""
+        """Submit personal best to database."""
         # TODO: Sterilization
         if "$" in map_code or "$" in level or "$" in record:
             map_code.replace("$", "")
@@ -235,7 +235,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         brief="Delete personal best record",
     )
     async def deletepb(self, ctx, map_code, level, name=""):
-        """Deletes personal best from database."""
+        """Delete personal best from database."""
         # TODO: Sterilization
         if "$" in map_code or "$" in level or "$" in name:
             map_code.replace("$", "")
@@ -297,5 +297,5 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
 
 def setup(bot):
-    """Adds Cog to Discord bot."""
+    """Add Cog to Discord bot."""
     bot.add_cog(SubmitPersonalBest(bot))

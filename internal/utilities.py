@@ -5,12 +5,12 @@ from internal import constants
 
 
 def is_time_format(s):
-    """Checks if string is in HH:MM:SS.SS format or a legal variation."""
+    """Check if string is in HH:MM:SS.SS format or a legal variation."""
     return bool(re.compile(r"(?<!.)(\d{1,2})?:?(\d{2})?:?(?<!\d)(\d{1,2})\.?\d{1,2}?(?!.)").match(s))
 
 
 def time_convert(time_input):
-    """Converts time (str) into seconds (float)"""
+    """Convert time (str) into seconds (float)"""
     time_list = time_input.split(":")
     if len(time_list) == 1:
         return float(time_list[0])
@@ -24,7 +24,7 @@ def time_convert(time_input):
 
 
 def display_record(record):
-    """Displays record in HH:MM:SS.SS format."""
+    """Display record in HH:MM:SS.SS format."""
     if str(datetime.timedelta(seconds=record)).count(".") == 1:
         return str(datetime.timedelta(seconds=record))[: -4 or None]
     else:
@@ -32,7 +32,7 @@ def display_record(record):
 
 
 def convert_short_types(map_type):
-    """Converts user inputted map_type to proper map_type if using abbreviation."""
+    """Convert user inputted map_type to proper map_type if using abbreviation."""
     if map_type in ["MULTI", "MULTILVL", "MULTILEVEL"]:
         return "MULTILEVEL"
     elif map_type in ["PIO", "PIONEER"]:
@@ -48,7 +48,7 @@ def convert_short_types(map_type):
 
 
 def map_name_converter(map_name):
-    """Converts variations of map_name to proper map_name for database."""
+    """Convert variations of map_name to proper map_name for database."""
     for i in range(len(constants.ALL_MAP_NAMES)):
         if map_name in constants.ALL_MAP_NAMES[i]:
             return constants.ALL_MAP_NAMES[i][0]

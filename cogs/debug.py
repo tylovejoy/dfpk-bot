@@ -4,9 +4,9 @@ from jishaku.metacog import GroupCogMeta
 
 
 class Debugging(JishakuBase, metaclass=GroupCogMeta, command_parent=jsk):
-    """Adds default Jishaku debugging as a cog."""
+    """Add default Jishaku debugging as a cog."""
 
 
 def setup(bot: commands.Bot):
-    """Adds Cog to Discord bot."""
+    """Add Cog to Discord bot."""
     bot.add_cog(Debugging(bot))

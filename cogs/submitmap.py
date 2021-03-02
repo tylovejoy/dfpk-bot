@@ -20,7 +20,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """Checks if command is used in MAP_SUBMIT_CHANNEL"""
+        """Check if command is used in MAP_SUBMIT_CHANNEL"""
         if ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID:
             return True
 
@@ -35,7 +35,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Submit map code",
     )
     async def submitmap(self, ctx, map_code, map_name, map_type, creator, *, desc=""):
-        """Submits a map to database.
+        """Submit a map to database.
 
         Args:
             ctx: bot Context
@@ -149,7 +149,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Delete map code",
     )
     async def deletemap(self, ctx, map_code):
-        """Deletes a specific map_code."""
+        """Delete a specific map_code."""
         map_code = map_code.upper()
 
         # If exists
@@ -196,7 +196,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Edit description for a certain map code",
     )
     async def editdesc(self, ctx, map_code, *, desc):
-        """Edits a specific map_code's description."""
+        """Edit a specific map_code's description."""
         # TODO: Proper sanitization
         if "$" in map_code or "$" in desc:
             map_code.replace("$", "")
@@ -244,7 +244,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Edit map types for a certain map code",
     )
     async def edittypes(self, ctx, map_code, *, map_type):
-        """Edits a specific map_code's map_types."""
+        """Edit a specific map_code's map_types."""
         # TODO: Proper sanitization
         if "$" in map_code or "$" in map_type:
             map_code.replace("$", "")
@@ -300,7 +300,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         brief="Edit the map code for a certain map code",
     )
     async def editcode(self, ctx, map_code, new_map_code):
-        """Edits a specific map_code's map_code."""
+        """Edit a specific map_code's map_code."""
         # TODO: Proper sanitization
         if "$" in map_code or "$" in new_map_code:
             map_code.replace("$", "")
@@ -346,5 +346,5 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
 
 
 def setup(bot):
-    """Adds Cog to Discord bot."""
+    """Add Cog to Discord bot."""
     bot.add_cog(SubmitMap(bot))

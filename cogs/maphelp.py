@@ -19,7 +19,7 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """Checks if commands are used in MAP_CHANNEL and MAP_SUBMIT_CHANNEL"""
+        """Check if commands are used in MAP_CHANNEL and MAP_SUBMIT_CHANNEL"""
         if ctx.channel.id in (
             constants.MAP_CHANNEL_ID,
             constants.MAP_SUBMIT_CHANNEL_ID,
@@ -31,7 +31,7 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
         brief="Shows map names for commands",
     )
     async def maps(self, ctx):
-        """Displays acceptable map names for use in other commands"""
+        """Display acceptable map names for use in other commands"""
         post = ""
         for maps in constants.ALL_MAP_NAMES:
             post += " | ".join(maps) + "\n"
@@ -43,10 +43,10 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
         brief="Shows map types for commands",
     )
     async def maptypes(self, ctx):
-        """Displays acceptable map types for use in other commands"""
+        """Display acceptable map types for use in other commands"""
         await ctx.send("Map types:\n```\n" + "\n".join(constants.TYPES_OF_MAP) + "```")
 
 
 def setup(bot):
-    """Adds Cog to Discord bot."""
+    """Add Cog to Discord bot."""
     bot.add_cog(MapHelp(bot))

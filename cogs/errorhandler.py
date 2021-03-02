@@ -11,7 +11,7 @@ class ErrorHandler(commands.Cog):
 
     @staticmethod
     def _format_traceback(error, maxlength):
-        """Formats a traceback, with the option to cut it at a max length."""
+        """Format a traceback, with the option to cut it at a max length."""
         v = ""
 
         for line in traceback.format_tb(error.__traceback__):
@@ -22,7 +22,7 @@ class ErrorHandler(commands.Cog):
             return v
 
     async def _send_traceback_embed(self, ctx: commands.Context, embed: discord.Embed):
-        """Sends a traceback in embed format to owner as a direct message."""
+        """Send a traceback in embed format to owner as a direct message."""
         cfg_value = self.bot.config.get("error_report_channel")
 
         if not cfg_value:
@@ -121,5 +121,5 @@ class ErrorHandler(commands.Cog):
 
 
 def setup(bot):
-    """Adds Cog to Discord bot."""
+    """Add Cog to Discord bot."""
     bot.add_cog(ErrorHandler(bot))

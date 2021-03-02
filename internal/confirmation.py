@@ -13,13 +13,14 @@ else:
 
 async def confirm(ctx: commands.Context, message: discord.Message):
     """
-    Creates a confirm/cancel reaction menu that
+    Create a confirm/cancel reaction menu that
     returns True or False depending on which reaction was clicked.
 
     If a timeout occurs, it will return None.
     """
 
     def check(r, u):
+        """Check if reaction is from command author."""
         return (
             str(r.emoji)
             in (constants.CONFIRM_REACTION_EMOJI, constants.CANCEL_REACTION_EMOJI)

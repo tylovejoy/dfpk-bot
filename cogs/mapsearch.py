@@ -149,7 +149,9 @@ class MapSearch(commands.Cog, name="Map Search"):
         await message.add_reaction(constants.RIGHT_REACTION_EMOJI)
 
         def check(reaction, user):
-            """Checks if user is command author. Only author can interact with menu."""
+            """Check if user is command author.
+            Only author can interact with menu.
+            """
             return user == ctx.author and str(reaction.emoji) in [
                 constants.LEFT_REACTION_EMOJI,
                 constants.RIGHT_REACTION_EMOJI,

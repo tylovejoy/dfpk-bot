@@ -16,7 +16,7 @@ if len(sys.argv) > 1:
 
 
 def load_config():
-    """Loads config and .env file."""
+    """Load config and .env file."""
     from os.path import join, dirname
     from dotenv import load_dotenv
 

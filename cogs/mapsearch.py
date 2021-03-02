@@ -77,11 +77,13 @@ class MapSearch(commands.Cog, name="Map Search"):
         row, page, embeds = 0, 1, []
 
         embed = discord.Embed(
-            title=map_name
+            title=map_name + f" Page {page}"
             if map_name
-            else creator
+            else creator + f" Page {page}"
             if creator
             else map_code + f" Page {page}"
+            if map_code
+            else map_type + f" Page {page}"
         )
         count = await MapData.count_documents(query)
 
@@ -96,11 +98,13 @@ class MapSearch(commands.Cog, name="Map Search"):
                 page += 1
                 embeds.append(embed)
                 embed = discord.Embed(
-                    title=map_name
+                    title=map_name + f" Page {page}"
                     if map_name
-                    else creator
+                    else creator + f" Page {page}"
                     if creator
                     else map_code + f" Page {page}"
+                    if map_code
+                    else map_type + f" Page {page}"
                 )
             # Create embed fields for fields 1 thru 9
             elif row % 10 != 0 or row == 0:
@@ -121,11 +125,11 @@ class MapSearch(commands.Cog, name="Map Search"):
                 ctx,
                 contents=embeds,
                 total_pages=len(embeds),
-                map_name=map_name if map_name else creator if creator else map_code,
+                map_name=map_name if map_name else creator if creator else map_code if map_code else map_type,
             )
         else:
             await ctx.send(
-                f"Nothing exists for {map_name if map_name else creator if creator else map_code}!"
+                f"Nothing exists for {map_name if map_name else creator if creator else map_code if map_code else map_type}!"
             )
 
     async def pages(self, ctx, contents, total_pages, map_name):
@@ -194,6 +198,115 @@ class MapSearch(commands.Cog, name="Map Search"):
                 await message.clear_reactions()
                 break
                 # ending the loop if user doesn't react after x seconds
+
+    @commands.command(
+        help="Displays all multilevel maps.",
+        brief="Displays all multilevel maps.",
+        aliases=["multi", "multilvl"]
+    )
+    async def multilevel(self, ctx):
+        """Search for and display all multilevel maps."""
+        map_name = "Multilevel"
+        query = {"type": "MULTILEVEL"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all single level maps.",
+        brief="Displays all single level maps.",
+    )
+    async def single(self, ctx):
+        """Search for and display all single maps."""
+        map_name = "SINGLE"
+        query = {"type": "SINGLE"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all pioneer maps.",
+        brief="Displays all pioneer maps.",
+        aliases=["pio"]
+    )
+    async def pioneer(self, ctx):
+        """Search for and display all pioneer maps."""
+        map_name = "Pioneer"
+        query = {"type": "PIONEER"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all time attack maps.",
+        brief="Displays all time attack maps.",
+        aliases=["time-attack", "ta"]
+    )
+    async def timeattack(self, ctx):
+        """Search for and display all time attack maps."""
+        map_name = "Time Attack"
+        query = {"type": "TIME-ATTACK"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all tutorial maps.",
+        brief="Displays all tutorial maps.",
+        aliases=["tut"]
+    )
+    async def tutorial(self, ctx):
+        """Search for and display all tutorial maps."""
+        map_name = "Tutorial"
+        query = {"type": "TUTORIAL"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all hardcore maps.",
+        brief="Displays all hardcore maps.",
+        aliases=["hc"]
+    )
+    async def hardcore(self, ctx):
+        """Search for and display all hardcore maps."""
+        map_name = "Hardcore"
+        query = {"type": "HARDCORE"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all mildcore maps.",
+        brief="Displays all mildcore maps.",
+        aliases=["mc"]
+    )
+    async def mildcore(self, ctx):
+        """Search for and display all mildcore maps."""
+        map_name = "Mildcore"
+        query = {"type": "MILDCORE"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all out of map maps.",
+        brief="Displays all out of map maps.",
+        aliases=["oom", "out-of-map"]
+    )
+    async def outofmap(self, ctx):
+        """Search for and display all out of map maps."""
+        map_name = "Out of Map"
+        query = {"type": "OUT-OF-MAP"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all ability lock maps.",
+        brief="Displays all ability lock maps.",
+        aliases=["ablock", "ab"]
+    )
+    async def abilityblock(self, ctx):
+        """Search for and display all ability block maps."""
+        map_name = "Ability Block"
+        query = {"type": "ABLOCK"}
+        await self.searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
+        help="Displays all nostalgia maps.",
+        brief="Displays all nostalgia maps.",
+        aliases=["old"]
+    )
+    async def nostalgia(self, ctx):
+        """Search for and display all nostalgia maps."""
+        map_name = "Nostalgia"
+        query = {"type": "NOSTALGIA"}
+        await self.searchmap(ctx, query, map_name=map_name)
 
     @commands.command(
         help="Lists most recent submitted maps which are not labeled as NOSTALGIA.",

@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 class Bot(commands.Bot):
     def __init__(self, **kwargs):
+        """Initializes Bot."""
         super().__init__(
             command_prefix=commands.when_mentioned_or(*kwargs.pop("prefix")),
             description=kwargs.pop("description"),
@@ -19,12 +20,12 @@ class Bot(commands.Bot):
             case_insensitive=kwargs.pop("case_insensitive"),
             help_command=PrettyHelp(show_index=False, color=discord.Color.purple()),
         )
-        self.start_time = None
         self.app_info = None
 
         self.loop.create_task(self.load_all_extensions())
 
     async def load_all_extensions(self):
+        """Loads all *.py files in /cogs/ as Cogs"""
         await self.wait_until_ready()
         await asyncio.sleep(
             1
@@ -40,7 +41,7 @@ class Bot(commands.Bot):
                 logging.info(f"failed to load extension {error}")
 
     async def on_ready(self):
-        """"""
+        """Displays app info when bot comes online."""
         self.app_info = await self.application_info()
         logging.info(
             f"\n\nLogged in as: {self.user.name}\n"
@@ -49,6 +50,7 @@ class Bot(commands.Bot):
         )
 
     async def on_message(self, message):
+        """Allows bot to ignore all other bots."""
         if message.author.bot:
-            return  # ignore all bots
+            return
         await self.process_commands(message)

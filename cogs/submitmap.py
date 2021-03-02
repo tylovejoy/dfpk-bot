@@ -346,4 +346,5 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
 
 
 def setup(bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(SubmitMap(bot))

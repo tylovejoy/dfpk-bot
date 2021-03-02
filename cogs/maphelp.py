@@ -48,4 +48,5 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
 
 
 def setup(bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(MapHelp(bot))

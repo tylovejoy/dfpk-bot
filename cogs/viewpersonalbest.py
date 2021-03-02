@@ -42,6 +42,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         self.bot = bot
 
     async def cog_check(self, ctx):
+        """Checks if channel is RECORD_CHANNEL"""
         if ctx.channel.id == constants.RECORD_CHANNEL_ID:
             return True
 
@@ -50,6 +51,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         brief="View personal best record",
     )
     async def pb(self, ctx, map_code, level, name=""):
+        """Displays personal best of a particular user, or author of command."""
         if name == "":
             name = ctx.author.name
         map_code = map_code.upper()
@@ -81,6 +83,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         aliases=["sb"],
     )
     async def scoreboard(self, ctx, map_code, level):
+        """Displays top 10 verified/unverified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
         query = {"code": map_code, "level": re.compile(level, re.IGNORECASE)}
@@ -93,6 +96,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         aliases=["lb"],
     )
     async def leaderboard(self, ctx, map_code, level):
+        """Displays top 10 verified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"
         query = {
@@ -102,13 +106,13 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         }
         await boards(ctx, map_code, level.upper(), title, query)
 
-    # view world record
     @commands.command(
         help="View world record(s) for a particular map code.\n[level] is an optional argument that will display a single level's world record.\nIf [level] is included, command will show only that level's world record.",
         brief="View world record",
         aliases=["wr"],
     )
     async def worldrecord(self, ctx, map_code, level=""):
+        """Displays world record for a level on a particular map_code, or all levels."""
         map_code = map_code.upper()
         exists = False
         url = ""
@@ -160,13 +164,13 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 f"No world record for {map_code}{' level ' + level.upper() if level else ''}!"
             )
 
-    # view levels associated with PBs in a map code
     @commands.command(
         help="Lists level names that are currently associated with <map_code>.",
         brief="Lists level names that are currently associated with <map_code>",
         aliases=["levelnames"],
     )
     async def levels(self, ctx, map_code):
+        """Displays all levels associated with a particular map_code."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL NAMES:\n"
         level_checker = {}
@@ -189,4 +193,5 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
 
 def setup(bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(ViewPersonalBest(bot))

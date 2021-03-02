@@ -22,7 +22,7 @@ class ErrorHandler(commands.Cog):
             return v
 
     async def _send_traceback_embed(self, ctx: commands.Context, embed: discord.Embed):
-
+        """Sends a traceback in embed format to owner as a direct message."""
         cfg_value = self.bot.config.get("error_report_channel")
 
         if not cfg_value:
@@ -121,4 +121,5 @@ class ErrorHandler(commands.Cog):
 
 
 def setup(bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(ErrorHandler(bot))

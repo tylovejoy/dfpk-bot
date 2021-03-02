@@ -149,11 +149,11 @@ class MapSearch(commands.Cog, name="Map Search"):
         await message.add_reaction(constants.RIGHT_REACTION_EMOJI)
 
         def check(reaction, user):
+            """Checks if user is command author. Only author can interact with menu."""
             return user == ctx.author and str(reaction.emoji) in [
                 constants.LEFT_REACTION_EMOJI,
                 constants.RIGHT_REACTION_EMOJI,
             ]
-            # Only command author can interact with menu
 
         while True:
             try:
@@ -716,4 +716,5 @@ class MapSearch(commands.Cog, name="Map Search"):
 
 
 def setup(bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(MapSearch(bot))

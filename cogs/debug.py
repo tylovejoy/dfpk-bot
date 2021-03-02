@@ -8,4 +8,5 @@ class Debugging(JishakuBase, metaclass=GroupCogMeta, command_parent=jsk):
 
 
 def setup(bot: commands.Bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(Debugging(bot))

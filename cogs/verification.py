@@ -22,6 +22,7 @@ class Verification(commands.Cog, name="Verification"):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload=None):
+        """Listens for verification reaction from moderators."""
         if payload.user_id == constants.BOT_ID:
             return
         if not bool(
@@ -61,6 +62,11 @@ class Verification(commands.Cog, name="Verification"):
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload=None):
+        """Listens for deleted messages.
+
+        If a deleted message was a personal best,
+        the record is deleted from the database.
+        """
         if payload is not None:
             search = await WorldRecords.find_one({"message_id": payload.message_id})
             if search is not None:
@@ -77,4 +83,5 @@ class Verification(commands.Cog, name="Verification"):
 
 
 def setup(bot):
+    """Adds Cog to Discord bot."""
     bot.add_cog(Verification(bot))

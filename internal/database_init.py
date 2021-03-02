@@ -6,6 +6,7 @@ instance = None
 
 
 def init(dburl, dbname):
+    """Initializes a database instance."""
     global instance
 
     client = AsyncIOMotorClient(dburl)

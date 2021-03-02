@@ -25,7 +25,7 @@ class Bot(commands.Bot):
         self.loop.create_task(self.load_all_extensions())
 
     async def load_all_extensions(self):
-        """Load all *.py files in /cogs/ as Cogs"""
+        """Load all *.py files in /cogs/ as Cogs."""
         await self.wait_until_ready()
         await asyncio.sleep(
             1

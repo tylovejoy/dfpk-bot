@@ -44,7 +44,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """Check if command is used in MAP_CHANNEL"""
+        """Check if command is used in MAP_CHANNEL."""
         if ctx.channel.id == constants.MAP_CHANNEL_ID:
             return True
 

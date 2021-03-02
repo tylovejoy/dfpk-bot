@@ -1,4 +1,4 @@
-"""Constants for use with 'test' arg"""
+"""Constants for use with 'test' arg."""
 
 # Customize the following
 

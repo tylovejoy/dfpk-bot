@@ -20,7 +20,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """Check if command is used in MAP_SUBMIT_CHANNEL"""
+        """Check if command is used in MAP_SUBMIT_CHANNEL."""
         if ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID:
             return True
 

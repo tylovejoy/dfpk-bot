@@ -6,7 +6,7 @@ from internal.database_init import instance
 
 @instance.register
 class MapData(Document):
-    """MapData"""
+    """MapData database document."""
 
     code = StringField(required=True, unique=True)
     creator = StringField(required=True)

@@ -6,7 +6,7 @@ from internal.database_init import instance
 
 @instance.register
 class WorldRecords(Document):
-    """WorldRecords"""
+    """WorldRecords database document."""
 
     code = StringField(required=True)
     name = StringField(required=True)

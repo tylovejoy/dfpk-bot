@@ -20,7 +20,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """Check if channel is RECORD_CHANNEL"""
+        """Check if channel is RECORD_CHANNEL."""
         if ctx.channel.id == constants.RECORD_CHANNEL_ID:
             return True
 

@@ -12,11 +12,10 @@ else:
 
 
 async def confirm(ctx: commands.Context, message: discord.Message):
-    """
-    Create a confirm/cancel reaction menu that
-    returns True or False depending on which reaction was clicked.
+    """Create a confirm/cancel reaction menu.
+    Return True or False depending on which reaction was clicked.
 
-    If a timeout occurs, it will return None.
+    If a timeout occurs, return None.
     """
 
     def check(r, u):

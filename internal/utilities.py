@@ -10,7 +10,7 @@ def is_time_format(s):
 
 
 def time_convert(time_input):
-    """Convert time (str) into seconds (float)"""
+    """Convert time (str) into seconds (float)."""
     time_list = time_input.split(":")
     if len(time_list) == 1:
         return float(time_list[0])

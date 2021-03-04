@@ -125,7 +125,13 @@ class MapSearch(commands.Cog, name="Map Search"):
                 ctx,
                 contents=embeds,
                 total_pages=len(embeds),
-                map_name=map_name if map_name else creator if creator else map_code if map_code else map_type,
+                map_name=map_name
+                if map_name
+                else creator
+                if creator
+                else map_code
+                if map_code
+                else map_type,
             )
         else:
             await ctx.send(
@@ -202,7 +208,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all multilevel maps.",
         brief="Displays all multilevel maps.",
-        aliases=["multi", "multilvl"]
+        aliases=["multi", "multilvl"],
     )
     async def multilevel(self, ctx):
         """Search for and display all multilevel maps."""
@@ -223,7 +229,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all pioneer maps.",
         brief="Displays all pioneer maps.",
-        aliases=["pio"]
+        aliases=["pio"],
     )
     async def pioneer(self, ctx):
         """Search for and display all pioneer maps."""
@@ -234,7 +240,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all time attack maps.",
         brief="Displays all time attack maps.",
-        aliases=["time-attack", "ta"]
+        aliases=["time-attack", "ta"],
     )
     async def timeattack(self, ctx):
         """Search for and display all time attack maps."""
@@ -245,7 +251,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all tutorial maps.",
         brief="Displays all tutorial maps.",
-        aliases=["tut"]
+        aliases=["tut"],
     )
     async def tutorial(self, ctx):
         """Search for and display all tutorial maps."""
@@ -256,7 +262,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all hardcore maps.",
         brief="Displays all hardcore maps.",
-        aliases=["hc"]
+        aliases=["hc"],
     )
     async def hardcore(self, ctx):
         """Search for and display all hardcore maps."""
@@ -267,7 +273,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all mildcore maps.",
         brief="Displays all mildcore maps.",
-        aliases=["mc"]
+        aliases=["mc"],
     )
     async def mildcore(self, ctx):
         """Search for and display all mildcore maps."""
@@ -278,7 +284,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all out of map maps.",
         brief="Displays all out of map maps.",
-        aliases=["oom", "out-of-map"]
+        aliases=["oom", "out-of-map"],
     )
     async def outofmap(self, ctx):
         """Search for and display all out of map maps."""
@@ -289,7 +295,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all ability lock maps.",
         brief="Displays all ability lock maps.",
-        aliases=["ablock", "ab"]
+        aliases=["ablock", "ab"],
     )
     async def abilityblock(self, ctx):
         """Search for and display all ability block maps."""
@@ -300,7 +306,7 @@ class MapSearch(commands.Cog, name="Map Search"):
     @commands.command(
         help="Displays all nostalgia maps.",
         brief="Displays all nostalgia maps.",
-        aliases=["old"]
+        aliases=["old"],
     )
     async def nostalgia(self, ctx):
         """Search for and display all nostalgia maps."""

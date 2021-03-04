@@ -6,7 +6,11 @@ from internal import constants
 
 def is_time_format(s):
     """Check if string is in HH:MM:SS.SS format or a legal variation."""
-    return bool(re.compile(r"(?<!.)(\d{1,2})?:?(\d{2})?:?(?<!\d)(\d{1,2})\.?\d{1,2}?(?!.)").match(s))
+    return bool(
+        re.compile(
+            r"(?<!.)(\d{1,2})?:?(\d{2})?:?(?<!\d)(\d{1,2})\.?\d{1,2}?(?!.)"
+        ).match(s)
+    )
 
 
 def time_convert(time_input):

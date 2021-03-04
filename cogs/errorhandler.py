@@ -7,6 +7,7 @@ from discord.ext import commands
 
 class ErrorHandler(commands.Cog):
     """Custom error handling for Discord bot."""
+
     def __init__(self, bot):
         self.bot = bot
 

@@ -17,6 +17,7 @@ else:
 
 class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion"):
     """Commands to submit and delete personal bests."""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -119,7 +120,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     )
 
                     hidden_msg = await channel.send(
-                        f"{submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}"
+                        f"{ctx.author.name} needs verification!\n{submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}"
                     )
                     submission.hidden_id = hidden_msg.id
                     await submission.commit()
@@ -194,7 +195,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
                             # New hidden message
                             hidden_msg = await channel.send(
-                                f"{submission.name} - {submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}"
+                                f"{ctx.author.name} needs verification!\n{submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{submission.url}"
                             )
                             submission.hidden_id = hidden_msg.id
                             await submission.commit()

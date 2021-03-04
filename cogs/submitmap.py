@@ -136,9 +136,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion"):
                     content=f"{constants.CANCEL_REACTION_EMOJI} Map submission rejected."
                 )
             elif confirmed is None:
-                await msg.edit(
-                    content="Submission timed out! Map submission rejected."
-                )
+                await msg.edit(content="Submission timed out! Map submission rejected.")
 
         else:
             await ctx.send(f"{map_code} already exists! Map submission rejected.")

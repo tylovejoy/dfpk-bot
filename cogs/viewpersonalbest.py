@@ -41,6 +41,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     """Commands to display personal records in different formats.
     World Records, Leaderboards, Scoreboards, etc.
     """
+
     def __init__(self, bot):
         self.bot = bot
 

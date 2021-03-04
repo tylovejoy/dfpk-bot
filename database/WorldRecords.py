@@ -20,4 +20,5 @@ class WorldRecords(Document):
 
     class Meta:
         """MongoDb database collection name."""
+
         collection_name = "WorldRecords"

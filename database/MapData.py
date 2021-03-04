@@ -17,4 +17,5 @@ class MapData(Document):
 
     class Meta:
         """MongoDb database collection name."""
+
         collection_name = "MapData"

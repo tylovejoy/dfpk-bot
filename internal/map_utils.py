@@ -1,20 +1,17 @@
-import asyncio
-import re
 import sys
 
 import discord
 import pymongo
-from discord.ext import commands
+from disputils import BotEmbedPaginator
 
 from database.MapData import MapData
-from internal import utilities, test_constants, constants
-from disputils import BotEmbedPaginator, BotConfirmation, BotMultipleChoice
+import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 async def searchmap(
@@ -146,10 +143,33 @@ async def map_edit_checks(ctx, map_code, search) -> int:
         return 0
     # Only allow original poster OR whitelisted roles to delete.
     if search.posted_by != ctx.author.id or not bool(
-        any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
+        any(role.id in constants_bot.ROLE_WHITELIST for role in ctx.author.roles)
     ):
         await ctx.channel.send(
             "You do not have sufficient permissions. Map was not deleted."
         )
         return 0
     return 1
+
+
+def convert_short_types(map_type):
+    """Convert user inputted map_type to proper map_type if using abbreviation."""
+    if map_type in ["MULTI", "MULTILVL", "MULTILEVEL"]:
+        return "MULTILEVEL"
+    elif map_type in ["PIO", "PIONEER"]:
+        return "PIONEER"
+    elif map_type in ["HC", "HARDCORE"]:
+        return "HARDCORE"
+    elif map_type in ["MC", "MILDCORE"]:
+        return "MILDCORE"
+    elif map_type in ["TA", "TIMEATTACK", "TIME-ATTACK"]:
+        return "TIME-ATTACK"
+    return map_type
+
+
+def map_name_converter(map_name):
+    """Convert variations of map_name to proper map_name for database."""
+    for i in range(len(constants.ALL_MAP_NAMES)):
+        if map_name in constants.ALL_MAP_NAMES[i]:
+            return constants.ALL_MAP_NAMES[i][0]
+    return

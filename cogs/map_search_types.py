@@ -6,14 +6,14 @@ import discord
 from discord.ext import commands
 
 from database.MapData import MapData
-from internal import utilities
 from internal.map_utils import searchmap
+import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 class MapSearchTypes(commands.Cog, name="Map Search"):
@@ -34,7 +34,7 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
 
     async def cog_check(self, ctx):
         """Check if command is used in MAP_CHANNEL."""
-        if ctx.channel.id == constants.MAP_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.MAP_CHANNEL_ID:
             return True
 
     @commands.command(
@@ -154,7 +154,7 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
     async def newest(self, ctx):
         """Show newest maps.
 
-        Display constants.NEWEST_MAPS_LIMIT amount of maps that were submitted
+        Display constants_bot.NEWEST_MAPS_LIMIT amount of maps that were submitted
         """
         embed = discord.Embed(title="Newest Maps")
 

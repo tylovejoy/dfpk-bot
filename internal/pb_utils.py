@@ -1,7 +1,10 @@
+import datetime
+import re
+
 import discord
 
 from database.WorldRecords import WorldRecords
-from internal import utilities, test_constants as constants
+import internal.constants as constants
 
 
 async def boards(ctx, map_code, level, title, query):
@@ -14,7 +17,7 @@ async def boards(ctx, map_code, level, title, query):
         embed.add_field(
             name=f"#{count} - {entry.name}",
             value=(
-                f"> Record: {utilities.display_record(entry.record)}\n"
+                f"> Record: {display_record(entry.record)}\n"
                 f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}"
             ),
             inline=False,
@@ -24,3 +27,33 @@ async def boards(ctx, map_code, level, title, query):
         await ctx.send(embed=embed)
     else:
         await ctx.send(f"No scoreboard for {map_code} level {level.upper()}!")
+
+
+def is_time_format(s):
+    """Check if string is in HH:MM:SS.SS format or a legal variation."""
+    return bool(
+        re.compile(
+            r"(?<!.)(\d{1,2})?:?(\d{2})?:?(?<!\d)(\d{1,2})\.?\d{1,2}?(?!.)"
+        ).match(s)
+    )
+
+
+def time_convert(time_input):
+    """Convert time (str) into seconds (float)."""
+    time_list = time_input.split(":")
+    if len(time_list) == 1:
+        return float(time_list[0])
+    elif len(time_list) == 2:
+        return float((int(time_list[0]) * 60) + float(time_list[1]))
+    elif len(time_list) == 3:
+        return float(
+            (int(time_list[0]) * 3600) + (int(time_list[1]) * 60) + float(time_list[2])
+        )
+    return
+
+
+def display_record(record):
+    """Display record in HH:MM:SS.SS format."""
+    if str(datetime.timedelta(seconds=record)).count(".") == 1:
+        return str(datetime.timedelta(seconds=record))[: -4 or None]
+    return str(datetime.timedelta(seconds=record)) + ".00"

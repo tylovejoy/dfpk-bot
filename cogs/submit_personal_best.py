@@ -1,4 +1,4 @@
-import logging
+from aiostream import stream
 import re
 import sys
 
@@ -6,14 +6,16 @@ import discord
 from discord.ext import commands
 from pymongo.collation import Collation
 
+import internal.constants as constants
+import internal.pb_utils
 from database.WorldRecords import WorldRecords
-from internal import utilities, confirmation
+from internal import confirmation
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion"):
@@ -24,7 +26,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
     async def cog_check(self, ctx):
         """Check if channel is RECORD_CHANNEL."""
-        if ctx.channel.id == constants.RECORD_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID:
             return True
 
     # Submit personal best records
@@ -50,7 +52,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
         map_code = map_code.upper()
         level = level.upper()
-        record_in_seconds = utilities.time_convert(record)
+        record_in_seconds = internal.pb_utils.time_convert(record)
 
         # Validates time
         if not record_in_seconds:
@@ -110,7 +112,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             value=(
                 f"> Code: {submission.code}\n"
                 f"> Level: {submission.level.upper()}\n"
-                f"> Record: {utilities.display_record(record_in_seconds)}\n"
+                f"> Record: {internal.pb_utils.display_record(record_in_seconds)}\n"
             ),
             inline=False,
         )
@@ -121,7 +123,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
         if confirmed is True:
 
-            channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
+            channel = self.bot.get_channel(constants_bot.HIDDEN_VERIFICATION_CHANNEL)
 
             # Try to fetch hidden_msg.
             try:
@@ -136,7 +138,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
 
                 # New hidden message
                 hidden_msg = await channel.send(
-                    f"{ctx.author.name} needs verification!\n{submission.code} - Level {submission.level} - {utilities.display_record(record_in_seconds)}\n{ctx.message.jump_url}"
+                    f"{ctx.author.name} needs verification!\n{submission.code} - Level {submission.level} - {internal.pb_utils.display_record(record_in_seconds)}\n{ctx.message.jump_url}"
                 )
 
                 # Update submission
@@ -162,13 +164,11 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     .sort("record", 1)
                     .limit(10)
                 )
-                rank = 0
-                async for entry in top_10:
-                    rank += 1
+                async for rank, entry in stream.enumerate(top_10):
                     if submission:
                         if entry.pk == submission.pk:
                             await ctx.channel.send(
-                                f"Your rank is {rank} on the unverified scoreboard."
+                                f"Your rank is {rank + 1} on the unverified scoreboard."
                             )
 
         elif confirmed is False:
@@ -209,33 +209,37 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             )
             return
 
-        if search.posted_by == ctx.author.id or bool(
-            any(role.id in constants.ROLE_WHITELIST for role in ctx.author.roles)
+        if search.posted_by != ctx.author.id or not bool(
+            any(role.id in constants_bot.ROLE_WHITELIST for role in ctx.author.roles)
         ):
-            embed = discord.Embed(title="Do you want to delete this?")
-            embed.add_field(
-                name=f"Name: {search.name}",
-                value=(
-                    f"> Code: {search.code}\n"
-                    f"> Level: {search.level.upper()}\n"
-                    f"> Record: {utilities.display_record(search.record)}\n"
-                ),
-                inline=False,
+            await ctx.channel.send(
+                "You do not have sufficient permissions. Personal best was not deleted."
             )
-            msg = await ctx.send(embed=embed)
-            confirmed = await confirmation.confirm(ctx, msg)
-            if confirmed is True:
-                await msg.edit(content="Personal best deleted succesfully.")
-                await search.delete()
-            elif confirmed is False:
-                await msg.edit(content="Personal best was not deleted.")
-            elif confirmed is None:
-                await msg.edit(
-                    content="Deletion timed out! Personal best has not been deleted."
-                )
+            return
 
-        else:
-            await ctx.channel.send("You cannot delete that!")
+        embed = discord.Embed(title="Do you want to delete this?")
+        embed.add_field(
+            name=f"Name: {search.name}",
+            value=(
+                f"> Code: {search.code}\n"
+                f"> Level: {search.level.upper()}\n"
+                f"> Record: {internal.pb_utils.display_record(search.record)}\n"
+            ),
+            inline=False,
+        )
+
+        msg = await ctx.send(embed=embed)
+        confirmed = await confirmation.confirm(ctx, msg)
+
+        if confirmed is True:
+            await msg.edit(content="Personal best deleted succesfully.")
+            await search.delete()
+        elif confirmed is False:
+            await msg.edit(content="Personal best was not deleted.")
+        elif confirmed is None:
+            await msg.edit(
+                content="Deletion timed out! Personal best has not been deleted."
+            )
 
 
 def setup(bot):

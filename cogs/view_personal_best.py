@@ -5,15 +5,16 @@ import discord
 from discord.ext import commands
 from pymongo.collation import Collation
 
+import internal.pb_utils
 from database.WorldRecords import WorldRecords
-from internal import utilities
 from internal.pb_utils import boards
+import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
@@ -26,7 +27,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
     async def cog_check(self, ctx):
         """Check if channel is RECORD_CHANNEL."""
-        if ctx.channel.id == constants.RECORD_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID:
             return True
 
     @commands.command(
@@ -50,7 +51,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             embed.add_field(
                 name=f"{search.code} - Level {search.level.upper()}",
                 value=(
-                    f"> Record: {utilities.display_record(search.record)}\n"
+                    f"> Record: {internal.pb_utils.display_record(search.record)}\n"
                     f"> Verified: {constants.VERIFIED_EMOJI if search.verified is True else constants.NOT_VERIFIED_EMOJI}"
                 ),
                 inline=False,
@@ -115,7 +116,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     exists = True
                     embed.add_field(
                         name=f"Level {entry.level.upper()} - {entry.name}",
-                        value=f"> Record: {utilities.display_record(entry.record)}\n",
+                        value=f"> Record: {internal.pb_utils.display_record(entry.record)}\n",
                         inline=False,
                     )
 
@@ -136,7 +137,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 embed = discord.Embed(title=f"{title}")
                 embed.add_field(
                     name=f"{entry.name}",
-                    value=f"> Record: {utilities.display_record(entry.record)}\n",
+                    value=f"> Record: {internal.pb_utils.display_record(entry.record)}\n",
                     inline=False,
                 )
                 url = entry.url
@@ -154,8 +155,10 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
     )
     async def levels(self, ctx, map_code):
         """Display all levels associated with a particular map_code."""
+
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL NAMES:\n"
+
         level_checker = {}
         async for entry in (
             WorldRecords.find({"code": map_code})
@@ -165,12 +168,15 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         ):
             if entry.level.upper() not in level_checker.keys():
                 level_checker[entry.level.upper()] = None
+
         if level_checker:
             embed = discord.Embed(title=f"{title}")
             embed.add_field(
                 name="Currenly submitted levels:", value=f"{', '.join(level_checker)}"
             )
+
             await ctx.send(embed=embed)
+
         else:
             await ctx.send(f"No level names found for {map_code}!")
 

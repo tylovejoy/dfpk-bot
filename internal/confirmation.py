@@ -3,12 +3,7 @@ import sys
 
 import discord
 from discord.ext import commands
-
-if len(sys.argv) > 1:
-    if sys.argv[1] == "test":
-        from internal import test_constants as constants
-else:
-    from internal import constants
+import internal.constants as constants
 
 
 async def confirm(ctx: commands.Context, message: discord.Message):

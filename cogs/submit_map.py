@@ -4,14 +4,21 @@ import sys
 from discord.ext import commands
 
 from database.MapData import MapData
-from internal import confirmation, utilities
-from internal.map_utils import map_submit_embed, map_edit_confirmation, map_edit_checks
+from internal import confirmation
+from internal.map_utils import (
+    map_submit_embed,
+    map_edit_confirmation,
+    map_edit_checks,
+    convert_short_types,
+    map_name_converter,
+)
+import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 class SubmitMap(commands.Cog, name="Map submission/deletion/editing"):
@@ -22,7 +29,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion/editing"):
 
     async def cog_check(self, ctx):
         """Check if command is used in MAP_SUBMIT_CHANNEL."""
-        if ctx.channel.id == constants.MAP_SUBMIT_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.MAP_SUBMIT_CHANNEL_ID:
             return True
 
     @commands.command(
@@ -45,7 +52,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion/editing"):
             return
 
         map_name = map_name.lower()
-        if not utilities.map_name_converter(map_name):
+        if not map_name_converter(map_name):
             await ctx.send(
                 "<map_name> doesn't exist! Map submission rejected. Use `/maps` for a list of acceptable maps."
             )
@@ -55,7 +62,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion/editing"):
         # Example:
         #          multi -> multilevel
         #          pio   -> pioneer
-        map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
+        map_type = [convert_short_types(x.upper()) for x in map_type.split()]
 
         # Checks map_type(s) exists
         for x in map_type:
@@ -73,7 +80,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion/editing"):
             await ctx.send(f"{map_code} already exists! Map submission rejected.")
             return
 
-        new_map_name = utilities.map_name_converter(map_name)
+        new_map_name = map_name_converter(map_name)
         submission = MapData(
             **dict(
                 code=map_code,
@@ -170,7 +177,7 @@ class SubmitMap(commands.Cog, name="Map submission/deletion/editing"):
         if await map_edit_checks(ctx, map_code, search) == 0:
             return
 
-        map_type = [utilities.convert_short_types(x.upper()) for x in map_type.split()]
+        map_type = [convert_short_types(x.upper()) for x in map_type.split()]
 
         for x in map_type:
             if x not in constants.TYPES_OF_MAP:

@@ -26,14 +26,14 @@ import-expression==1.1.4
 isort==5.6.4
 itsdangerous==1.1.0
 Jinja2==2.11.2
-jishaku==1.20.0.220
+jishaku
 lazy-object-proxy==1.4.3
 MarkupSafe==1.1.1
 marshmallow==3.8.0
 marshmallow-sqlalchemy==0.24.2
 mccabe==0.6.1
 MongoSanitizer==0.0.1
-motor==2.3.0
+motor
 multidict==4.7.6
 mypy-extensions==0.4.3
 pathspec==0.8.1
@@ -41,9 +41,9 @@ prettytable==2.0.0
 pycparser==2.20
 pydantic==1.7.3
 pylint==2.6.0
-pymongo==3.11.0
+pymongo
 python-dateutil==2.8.1
-python-dotenv==0.14.0
+python-dotenv
 regex==2020.11.13
 requirements-detector==0.7
 six==1.15.0
@@ -53,7 +53,7 @@ toml==0.10.2
 tornado==6.0.4
 typed-ast==1.4.2
 typing-extensions==3.7.4.3
-umongo==3.0.0b10
+umongo
 uvicorn==0.13.4
 vermin==0.10.5
 wcwidth==0.2.5
@@ -63,3 +63,5 @@ wrapt==1.12.1
 yarl==1.5.1
 zope.event==4.5.0
 zope.interface==5.1.2
+
+disputils

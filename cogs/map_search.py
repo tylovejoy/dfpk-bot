@@ -7,34 +7,13 @@ from discord.ext import commands
 
 from database.MapData import MapData
 from internal import utilities
+from internal.map_utils import searchmap, normal_map_query
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
         from internal import test_constants as constants
 else:
     from internal import constants
-
-
-def normal_map_query(map_name, map_type=""):
-    """Create a query string for map search commands.
-
-    Args:
-        map_name: The map name a user is searching for.
-        map_type: The map type a user is searching for.
-
-    Returns:
-        dict: query for map search command, depending on if map_type is given.
-
-    """
-    apostrophe = "'"
-    if map_type:
-        return {
-            "map_name": f"{''.join(map_name.split()).lower().replace(apostrophe, '').replace(':', '')}",
-            "type": map_type.upper(),
-        }
-    return {
-        "map_name": f"{''.join(map_name.split()).lower().replace(apostrophe, '').replace(':', '')}"
-    }
 
 
 class MapSearch(commands.Cog, name="Map Search"):
@@ -48,351 +27,6 @@ class MapSearch(commands.Cog, name="Map Search"):
         if ctx.channel.id == constants.MAP_CHANNEL_ID:
             return True
 
-    async def searchmap(
-        self, ctx, query: dict, map_type="", map_name="", creator="", map_code=""
-    ):
-        """Search database for query and displays it.
-
-        Args:
-            ctx (:obj: `commands.Context`)
-            query (dict): Query for database
-            map_type (str, optional): Type of map to search
-            map_name (str, optional): Name of map to seach
-            creator (str, optional): Creator of map to search
-            map_code (str, optional): Map code to search
-
-        Returns:
-            None
-
-        """
-        # Checks for map_type, if exists
-        if map_type:
-            if map_type not in constants.TYPES_OF_MAP:
-                await ctx.send(
-                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
-                )
-                return
-
-        # init vars
-        row, page, embeds = 0, 1, []
-
-        embed = discord.Embed(
-            title=map_name + f" Page {page}"
-            if map_name
-            else creator + f" Page {page}"
-            if creator
-            else map_code + f" Page {page}"
-            if map_code
-            else map_type + f" Page {page}"
-        )
-        count = await MapData.count_documents(query)
-
-        async for entry in MapData.find(query):
-            # Every 10th embed field, create a embed obj and add to a list
-            if row != 0 and (row % 10 == 0 or count - 1 == row):
-                embed.add_field(
-                    name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
-                    value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                    inline=False,
-                )
-                page += 1
-                embeds.append(embed)
-                embed = discord.Embed(
-                    title=map_name + f" Page {page}"
-                    if map_name
-                    else creator + f" Page {page}"
-                    if creator
-                    else map_code + f" Page {page}"
-                    if map_code
-                    else map_type + f" Page {page}"
-                )
-            # Create embed fields for fields 1 thru 9
-            elif row % 10 != 0 or row == 0:
-                embed.add_field(
-                    name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
-                    value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                    inline=False,
-                )
-
-            # If only one page
-            if count == 1:
-                embeds.append(embed)
-            row += 1
-
-        # For multiple pages
-        if row:
-            await self.pages(
-                ctx,
-                contents=embeds,
-                total_pages=len(embeds),
-                map_name=map_name
-                if map_name
-                else creator
-                if creator
-                else map_code
-                if map_code
-                else map_type,
-            )
-        else:
-            await ctx.send(
-                f"Nothing exists for {map_name if map_name else creator if creator else map_code if map_code else map_type}!"
-            )
-
-    async def pages(self, ctx, contents, total_pages, map_name):
-        """Paginate embeds for commands.
-
-        Args:
-            ctx (:obj: `commands.Context`): discord bot Context
-            contents (list): List of discord embed objects
-            total_pages (int): Amount of objects in contents
-            map_name (str): Name of map
-
-        Returns:
-            None
-
-        """
-        cur_page = 1
-        message = await ctx.send(embed=contents[cur_page - 1])
-        # getting the message object for editing and reacting
-
-        await message.add_reaction(constants.LEFT_REACTION_EMOJI)
-        await message.add_reaction(constants.RIGHT_REACTION_EMOJI)
-
-        def check(reaction, user):
-            """Check if user is command author.
-            Only author can interact with menu.
-            """
-            return user == ctx.author and str(reaction.emoji) in [
-                constants.LEFT_REACTION_EMOJI,
-                constants.RIGHT_REACTION_EMOJI,
-            ]
-
-        while True:
-            try:
-                reaction, user = await self.bot.wait_for(
-                    "reaction_add", timeout=60, check=check
-                )
-                # waits for reaction - times out after 60
-                if (
-                    str(reaction.emoji) == constants.RIGHT_REACTION_EMOJI
-                    and cur_page != total_pages
-                ):
-                    cur_page += 1
-                    await message.edit(embed=contents[cur_page - 1])
-                    await message.remove_reaction(reaction, user)
-
-                elif (
-                    str(reaction.emoji) == constants.LEFT_REACTION_EMOJI
-                    and cur_page > 1
-                ):
-                    cur_page -= 1
-                    await message.edit(embed=contents[cur_page - 1])
-                    await message.remove_reaction(reaction, user)
-
-                else:
-                    # Loops last page to the first and first to the last.
-                    if cur_page == total_pages:
-                        cur_page = 1
-                        await message.edit(embed=contents[cur_page - 1])
-                        await message.remove_reaction(reaction, user)
-                    elif cur_page == 1:
-                        cur_page = total_pages
-                        await message.edit(embed=contents[cur_page - 1])
-                        await message.remove_reaction(reaction, user)
-
-            except asyncio.TimeoutError:
-                await message.clear_reactions()
-                break
-                # ending the loop if user doesn't react after x seconds
-
-    @commands.command(
-        help="Displays all multilevel maps.",
-        brief="Displays all multilevel maps.",
-        aliases=["multi", "multilvl"],
-    )
-    async def multilevel(self, ctx):
-        """Search for and display all multilevel maps."""
-        map_name = "Multilevel"
-        query = {"type": "MULTILEVEL"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all single level maps.",
-        brief="Displays all single level maps.",
-    )
-    async def single(self, ctx):
-        """Search for and display all single maps."""
-        map_name = "SINGLE"
-        query = {"type": "SINGLE"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all pioneer maps.",
-        brief="Displays all pioneer maps.",
-        aliases=["pio"],
-    )
-    async def pioneer(self, ctx):
-        """Search for and display all pioneer maps."""
-        map_name = "Pioneer"
-        query = {"type": "PIONEER"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all time attack maps.",
-        brief="Displays all time attack maps.",
-        aliases=["time-attack", "ta"],
-    )
-    async def timeattack(self, ctx):
-        """Search for and display all time attack maps."""
-        map_name = "Time Attack"
-        query = {"type": "TIME-ATTACK"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all tutorial maps.",
-        brief="Displays all tutorial maps.",
-        aliases=["tut"],
-    )
-    async def tutorial(self, ctx):
-        """Search for and display all tutorial maps."""
-        map_name = "Tutorial"
-        query = {"type": "TUTORIAL"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all hardcore maps.",
-        brief="Displays all hardcore maps.",
-        aliases=["hc"],
-    )
-    async def hardcore(self, ctx):
-        """Search for and display all hardcore maps."""
-        map_name = "Hardcore"
-        query = {"type": "HARDCORE"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all mildcore maps.",
-        brief="Displays all mildcore maps.",
-        aliases=["mc"],
-    )
-    async def mildcore(self, ctx):
-        """Search for and display all mildcore maps."""
-        map_name = "Mildcore"
-        query = {"type": "MILDCORE"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all out of map maps.",
-        brief="Displays all out of map maps.",
-        aliases=["oom", "out-of-map"],
-    )
-    async def outofmap(self, ctx):
-        """Search for and display all out of map maps."""
-        map_name = "Out of Map"
-        query = {"type": "OUT-OF-MAP"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all ability lock maps.",
-        brief="Displays all ability lock maps.",
-        aliases=["ablock", "ab"],
-    )
-    async def abilityblock(self, ctx):
-        """Search for and display all ability block maps."""
-        map_name = "Ability Block"
-        query = {"type": "ABLOCK"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Displays all nostalgia maps.",
-        brief="Displays all nostalgia maps.",
-        aliases=["old"],
-    )
-    async def nostalgia(self, ctx):
-        """Search for and display all nostalgia maps."""
-        map_name = "Nostalgia"
-        query = {"type": "NOSTALGIA"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Lists most recent submitted maps which are not labeled as NOSTALGIA.",
-        brief="Lists most recent submitted maps",
-        aliases=["new", "latest"],
-    )
-    async def newest(self, ctx):
-        """Show newest maps.
-
-        Display constants.NEWEST_MAPS_LIMIT amount of maps that were submitted
-        """
-        embed = discord.Embed(title="Newest Maps")
-
-        count = await MapData.count_documents()
-        row = 0
-        async for entry in MapData.find({"map_type": {"$nin": ["NOSTALGIA"]}}).skip(
-            count - constants.NEWEST_MAPS_LIMIT
-        ):
-            embed.add_field(
-                name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
-                value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                inline=False,
-            )
-            row = 1
-        if row:
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send("No latest maps!")
-
-    @commands.command(
-        help="Search for maps by a specific creator.\n<creator> is not case-sensitive and can contain a portion of a name.",
-        brief="Search for maps by a specific creator",
-    )
-    async def creator(self, ctx, creator):
-        """Search for and display maps by a certain creator."""
-        query = {"creator": re.compile(creator, re.IGNORECASE)}
-        await self.searchmap(ctx, query, creator=creator.capitalize())
-
-    @commands.command(
-        help="Search for the creator/details of a map. Enter <map_code> to find the details of that code.",
-        brief="Search for the creator/details of a map",
-        aliases=["code"],
-    )
-    async def mapcode(self, ctx, map_code):
-        """Search for and display a certain map code."""
-        code = map_code.upper()
-        query = {"code": code}
-        embed = None
-        async for entry in MapData.find(query):
-            embed = discord.Embed()
-            embed.add_field(
-                name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
-                value=f"> Creator: {entry.creator}\n> Map Types: {', '.join(entry.type)}\n> Description: {entry.desc}",
-                inline=False,
-            )
-        if embed:
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(f"{code} does not exist!")
-
-    @commands.command(
-        help="Display all megamaps",
-        brief="Display all megamaps",
-    )
-    async def megamap(self, ctx):
-        """Search for and display all megamaps."""
-        map_name = "Megamap"
-        query = {"type": "MEGAMAP"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
-    @commands.command(
-        help="Display all multimaps",
-        brief="Display all multimaps",
-    )
-    async def multimap(self, ctx):
-        """Search for and display all multimaps."""
-        map_name = "Multimap"
-        query = {"type": "MULTIMAP"}
-        await self.searchmap(ctx, query, map_name=map_name)
-
     @commands.command(
         aliases=constants.AYUTTHAYA[1:],
         help="Display all Ayutthaya maps. Optional argument for a single <map_type> to filter search. Use '/help maptypes' for a list of map types",
@@ -404,7 +38,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Ayutthaya"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.BLACKFOREST[1:],
@@ -417,7 +51,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Black Forest"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.BLIZZARDWORLD[1:],
@@ -430,7 +64,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Blizzard World"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.BUSAN[1:],
@@ -443,7 +77,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Busan"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.CASTILLO[1:],
@@ -456,7 +90,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Castillo"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.CHATEAUGUILLARD[1:],
@@ -469,7 +103,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Chateau Guillard"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.DORADO[1:],
@@ -482,7 +116,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Dorado"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.EICHENWALDE[1:],
@@ -495,7 +129,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Eichenwalde"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HANAMURA[1:],
@@ -508,7 +142,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Hanamura"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HAVANA[1:],
@@ -521,7 +155,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Havana"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HOLLYWOOD[1:],
@@ -534,7 +168,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Hollywood"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.HORIZONLUNARCOLONY[1:],
@@ -547,7 +181,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Horizon Lunar Colony"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.ILIOS[1:],
@@ -560,7 +194,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Ilios"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.JUNKERTOWN[1:],
@@ -573,7 +207,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Junkertown"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.LIJIANGTOWER[1:],
@@ -586,7 +220,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Lijiang Tower"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.NECROPOLIS[1:],
@@ -599,7 +233,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Necropolis"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.NEPAL[1:],
@@ -612,7 +246,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Nepal"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.NUMBANI[1:],
@@ -625,7 +259,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Numbani"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.OASIS[1:],
@@ -638,7 +272,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Oasis"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.PARIS[1:],
@@ -651,7 +285,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Paris"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.RIALTO[1:],
@@ -664,7 +298,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Rialto"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.ROUTE66[1:],
@@ -677,7 +311,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Route 66"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.TEMPLEOFANUBIS[1:],
@@ -690,7 +324,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Temple of Anubis"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.VOLSKAYAINDUSTRIES[1:],
@@ -703,7 +337,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Volskaya Industries"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WATCHPOINTGIBRALTAR[1:],
@@ -716,7 +350,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Watchpoint Gibraltar"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.KINGSROW[1:],
@@ -729,7 +363,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "King's Row"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.PETRA[1:],
@@ -742,7 +376,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Petra"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.ECOPOINTANTARCTICA[1:],
@@ -755,7 +389,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Ecopoint Antarctica"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.KANEZAKA[1:],
@@ -768,7 +402,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Kanezaka"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPCHAMBER[1:],
@@ -781,7 +415,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Workshop Chamber"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPEXPANSE[1:],
@@ -794,7 +428,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Workshop Expanse"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPGREENSCREEN[1:],
@@ -807,7 +441,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Workshop Greenscreen"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.WORKSHOPISLAND[1:],
@@ -820,7 +454,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Workshop Island"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
     @commands.command(
         aliases=constants.PRACTICERANGE[1:],
@@ -833,7 +467,7 @@ class MapSearch(commands.Cog, name="Map Search"):
         map_name = "Practice Range"
         map_type = utilities.convert_short_types(map_type.upper())
         query = normal_map_query(map_name, map_type)
-        await self.searchmap(ctx, query, map_type=map_type, map_name=map_name)
+        await searchmap(ctx, query, map_type=map_type, map_name=map_name)
 
 
 def setup(bot):

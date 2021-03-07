@@ -48,7 +48,7 @@ NEWEST_MAPS_LIMIT = 7
 # Map names | CUSTOMIZE ACCEPTABLE NAMES
 AYUTTHAYA = ["ayutthaya", "ayutt"]
 BLACKFOREST = ["blackforest", "bf"]
-BLIZZARDWORLD = ["blizzardworld", "bw", "blizz", "blizzworld"]
+BLIZZARDWORLD = ["blizzardworld", "bw", "blizz", "blizzworld", "blizzard"]
 BUSAN = ["busan"]
 CASTILLO = ["castillo"]
 CHATEAUGUILLARD = ["chateauguillard", "chateau", "guillard"]
@@ -103,8 +103,6 @@ ALL_MAP_NAMES = [
     LIJIANGTOWER,
     NECROPOLIS,
     NEPAL,
-    NUMBANI,
-    OASIS,
     NUMBANI,
     OASIS,
     PARIS,

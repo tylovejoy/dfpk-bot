@@ -1,12 +1,13 @@
 import sys
 
 from discord.ext import commands
+import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 class MapHelp(commands.Cog, name="Helpful Map Commands"):
@@ -21,8 +22,8 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
     async def cog_check(self, ctx):
         """Check if commands are used in MAP_CHANNEL and MAP_SUBMIT_CHANNEL."""
         if ctx.channel.id in (
-            constants.MAP_CHANNEL_ID,
-            constants.MAP_SUBMIT_CHANNEL_ID,
+            constants_bot.MAP_CHANNEL_ID,
+            constants_bot.MAP_SUBMIT_CHANNEL_ID,
         ):
             return True
 

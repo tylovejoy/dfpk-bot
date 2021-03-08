@@ -2,14 +2,15 @@ import sys
 
 from discord.ext import commands
 
+import internal.pb_utils
 from database.WorldRecords import WorldRecords
-from internal import utilities
+import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import test_constants as constants
+        from internal import constants_bot_test as constants_bot
 else:
-    from internal import constants
+    from internal import constants_bot_prod as constants_bot
 
 
 class Verification(commands.Cog, name="Verification"):
@@ -20,16 +21,18 @@ class Verification(commands.Cog, name="Verification"):
 
     async def cog_check(self, ctx):
         """Check if channel is RECORD_CHANNEL."""
-        if ctx.channel.id == constants.RECORD_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID:
             return True
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload=None):
         """Listen for verification reaction from moderators."""
-        if payload.user_id == constants.BOT_ID:
+        if payload.user_id == constants_bot.BOT_ID:
             return
         if not bool(
-            any(role.id in constants.ROLE_WHITELIST for role in payload.member.roles)
+            any(
+                role.id in constants_bot.ROLE_WHITELIST for role in payload.member.roles
+            )
         ):
             return
         if payload is not None:
@@ -39,7 +42,7 @@ class Verification(commands.Cog, name="Verification"):
                 channel = guild.get_channel(payload.channel_id)
                 msg = await channel.fetch_message(payload.message_id)
                 hidden_channel = guild.get_channel(
-                    constants.HIDDEN_VERIFICATION_CHANNEL
+                    constants_bot.HIDDEN_VERIFICATION_CHANNEL
                 )
                 try:
                     hidden_msg = await hidden_channel.fetch_message(search.hidden_id)
@@ -51,14 +54,14 @@ class Verification(commands.Cog, name="Verification"):
                         search.verified = True
                         await search.commit()
                         await msg.author.send(
-                            f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
+                            f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {internal.pb_utils.display_record(search.record)}```{msg.jump_url}"
                         )
 
                     elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
                         search.verified = False
                         await search.commit()
                         await msg.author.send(
-                            f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {utilities.display_record(search.record)}```{msg.jump_url}"
+                            f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {internal.pb_utils.display_record(search.record)}```{msg.jump_url}"
                         )
 
                     await msg.clear_reactions()
@@ -73,7 +76,9 @@ class Verification(commands.Cog, name="Verification"):
         if payload is not None:
             search = await WorldRecords.find_one({"message_id": payload.message_id})
             if search is not None:
-                channel = self.bot.get_channel(constants.HIDDEN_VERIFICATION_CHANNEL)
+                channel = self.bot.get_channel(
+                    constants_bot.HIDDEN_VERIFICATION_CHANNEL
+                )
                 try:
                     hidden_msg = await channel.fetch_message(search.hidden_id)
                     if hidden_msg:

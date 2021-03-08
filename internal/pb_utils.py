@@ -1,7 +1,32 @@
 import datetime
 import re
 
-from internal import constants
+import discord
+
+from database.WorldRecords import WorldRecords
+import internal.constants as constants
+
+
+async def boards(ctx, map_code, level, title, query):
+    """Display boards for scoreboard and leaderboard commands."""
+    count = 1
+    exists = False
+    embed = discord.Embed(title=f"{title}")
+    async for entry in WorldRecords.find(query).sort("record", 1).limit(10):
+        exists = True
+        embed.add_field(
+            name=f"#{count} - {entry.name}",
+            value=(
+                f"> Record: {display_record(entry.record)}\n"
+                f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}"
+            ),
+            inline=False,
+        )
+        count += 1
+    if exists:
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"No scoreboard for {map_code} level {level.upper()}!")
 
 
 def is_time_format(s):
@@ -32,26 +57,3 @@ def display_record(record):
     if str(datetime.timedelta(seconds=record)).count(".") == 1:
         return str(datetime.timedelta(seconds=record))[: -4 or None]
     return str(datetime.timedelta(seconds=record)) + ".00"
-
-
-def convert_short_types(map_type):
-    """Convert user inputted map_type to proper map_type if using abbreviation."""
-    if map_type in ["MULTI", "MULTILVL", "MULTILEVEL"]:
-        return "MULTILEVEL"
-    elif map_type in ["PIO", "PIONEER"]:
-        return "PIONEER"
-    elif map_type in ["HC", "HARDCORE"]:
-        return "HARDCORE"
-    elif map_type in ["MC", "MILDCORE"]:
-        return "MILDCORE"
-    elif map_type in ["TA", "TIMEATTACK", "TIME-ATTACK"]:
-        return "TIME-ATTACK"
-    return map_type
-
-
-def map_name_converter(map_name):
-    """Convert variations of map_name to proper map_name for database."""
-    for i in range(len(constants.ALL_MAP_NAMES)):
-        if map_name in constants.ALL_MAP_NAMES[i]:
-            return constants.ALL_MAP_NAMES[i][0]
-    return

@@ -3,8 +3,8 @@ import re
 
 import discord
 
-from database.WorldRecords import WorldRecords
 import internal.constants as constants
+from database.WorldRecords import WorldRecords
 
 
 async def boards(ctx, map_code, level, title, query):

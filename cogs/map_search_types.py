@@ -1,13 +1,12 @@
-import asyncio
 import re
 import sys
 
 import discord
 from discord.ext import commands
 
+import internal.constants as constants
 from database.MapData import MapData
 from internal.map_utils import searchmap
-import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

@@ -4,8 +4,8 @@ import discord
 import pymongo
 from disputils import BotEmbedPaginator
 
-from database.MapData import MapData
 import internal.constants as constants
+from database.MapData import MapData
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

@@ -1,8 +1,8 @@
-from aiostream import stream
 import re
 import sys
 
 import discord
+from aiostream import stream
 from discord.ext import commands
 from pymongo.collation import Collation
 

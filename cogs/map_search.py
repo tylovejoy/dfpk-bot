@@ -1,13 +1,8 @@
-import asyncio
-import re
 import sys
 
-import discord
 from discord.ext import commands
 
 import internal.constants as constants
-import internal.map_utils
-from database.MapData import MapData
 from internal.map_utils import searchmap, normal_map_query, convert_short_types
 
 if len(sys.argv) > 1:

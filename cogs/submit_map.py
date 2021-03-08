@@ -3,6 +3,7 @@ import sys
 
 from discord.ext import commands
 
+import internal.constants as constants
 from database.MapData import MapData
 from internal import confirmation
 from internal.map_utils import (
@@ -12,7 +13,6 @@ from internal.map_utils import (
     convert_short_types,
     map_name_converter,
 )
-import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

@@ -5,10 +5,10 @@ import discord
 from discord.ext import commands
 from pymongo.collation import Collation
 
+import internal.constants as constants
 import internal.pb_utils
 from database.WorldRecords import WorldRecords
 from internal.pb_utils import boards
-import internal.constants as constants
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":

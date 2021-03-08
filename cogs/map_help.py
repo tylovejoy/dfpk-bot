@@ -1,6 +1,7 @@
 import sys
 
 from discord.ext import commands
+
 import internal.constants as constants
 
 if len(sys.argv) > 1:

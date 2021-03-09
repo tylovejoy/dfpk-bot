@@ -1,12 +1,12 @@
 import re
 import sys
-
+from pymongo import ASCENDING, DESCENDING
 import discord
 from discord.ext import commands
 
 import internal.constants as constants
 from database.MapData import MapData
-from internal.map_utils import searchmap
+from internal.map_utils import searchmap, convert_short_types
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -150,17 +150,32 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
         brief="Lists most recent submitted maps",
         aliases=["new", "latest"],
     )
-    async def newest(self, ctx):
+    async def newest(self, ctx, map_type=""):
         """Show newest maps.
 
         Display constants_bot.NEWEST_MAPS_LIMIT amount of maps that were submitted
         """
         embed = discord.Embed(title="Newest Maps")
 
-        count = await MapData.count_documents()
+
         row = 0
-        async for entry in MapData.find({"map_type": {"$nin": ["NOSTALGIA"]}}).skip(
-            count - constants.NEWEST_MAPS_LIMIT
+        query = {}
+        map_type = convert_short_types(map_type.upper())
+        if map_type:
+            if map_type not in constants.TYPES_OF_MAP:
+                await ctx.send(
+                    f"{map_type} not in map types. Use `/maptypes` for a list of acceptable map types."
+                )
+                return
+            query = {"type": map_type}
+        count = await MapData.count_documents(query)
+        # async for entry in MapData.find(query).sort(
+        #             [("_id", ASCENDING)]
+        #         ).limit(
+        #     constants.NEWEST_MAPS_LIMIT
+        # ):
+        async for entry in MapData.find(query).skip(
+                (count - constants.NEWEST_MAPS_LIMIT) if count > constants.NEWEST_MAPS_LIMIT else 0
         ):
             embed.add_field(
                 name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",

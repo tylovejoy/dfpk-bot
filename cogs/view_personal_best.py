@@ -66,7 +66,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         brief="View top 10 verified/unverified records",
         aliases=["sb"],
     )
-    async def scoreboard(self, ctx, map_code, level):
+    async def scoreboard(self, ctx, map_code, *, level):
         """Display top 10 verified/unverified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
@@ -79,7 +79,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         brief="View top 10 records",
         aliases=["lb"],
     )
-    async def leaderboard(self, ctx, map_code, level):
+    async def leaderboard(self, ctx, map_code, *, level):
         """Display top 10 verified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"

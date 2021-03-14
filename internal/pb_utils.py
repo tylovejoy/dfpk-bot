@@ -54,6 +54,26 @@ def time_convert(time_input):
 
 def display_record(record):
     """Display record in HH:MM:SS.SS format."""
-    if str(datetime.timedelta(seconds=record)).count(".") == 1:
+    if check_negative(record):
+        return format(record)
+    elif str(datetime.timedelta(seconds=record)).count(".") == 1:
         return str(datetime.timedelta(seconds=record))[: -4 or None]
     return str(datetime.timedelta(seconds=record)) + ".00"
+
+
+def check_negative(s):
+    try:
+        f = float(s)
+        if f < 0:
+            return True
+        # Otherwise return false
+        return False
+    except ValueError:
+        return False
+
+
+def format_timedelta(td):
+    if td < datetime.timedelta(0):
+        return '-' + format_timedelta(-td)
+    else:
+        return str(td)

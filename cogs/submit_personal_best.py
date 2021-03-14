@@ -164,12 +164,14 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                     .sort("record", 1)
                     .limit(10)
                 )
-                async for rank, entry in stream.enumerate(top_10):
-                    if submission:
-                        if entry.pk == submission.pk:
-                            await ctx.channel.send(
-                                f"Your rank is {rank + 1} on the unverified scoreboard."
-                            )
+                en = stream.enumerate(top_10)
+                async with en.stream() as streamer:
+                    async for rank, entry in streamer:
+                        if submission:
+                            if entry.pk == submission.pk:
+                                await ctx.channel.send(
+                                    f"Your rank is {rank + 1} on the unverified scoreboard."
+                                )
 
         elif confirmed is False:
             await msg.edit(

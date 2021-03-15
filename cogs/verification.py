@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from discord.ext import commands
@@ -50,21 +51,24 @@ class Verification(commands.Cog, name="Verification"):
                 except:
                     pass
                 finally:
-                    if str(payload.emoji) == constants.VERIFIED_EMOJI:
-                        search.verified = True
-                        await search.commit()
-                        await msg.author.send(
-                            f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {internal.pb_utils.display_record(search.record)}```{msg.jump_url}"
-                        )
+                    try:
+                        if str(payload.emoji) == constants.VERIFIED_EMOJI:
+                            search.verified = True
+                            await search.commit()
+                            await msg.author.send(
+                                f"Your submission has been verified by {payload.member.name}!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {internal.pb_utils.display_record(search.record)}```{msg.jump_url}"
+                            )
 
-                    elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
-                        search.verified = False
-                        await search.commit()
-                        await msg.author.send(
-                            f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {internal.pb_utils.display_record(search.record)}```{msg.jump_url}"
-                        )
-
-                    await msg.clear_reactions()
+                        elif str(payload.emoji) == constants.NOT_VERIFIED_EMOJI:
+                            search.verified = False
+                            await search.commit()
+                            await msg.author.send(
+                                f"{payload.member.name} has rejected your submission and is not verified!\n```Map Code: {search.code}{constants.NEW_LINE}Level: {search.level}{constants.NEW_LINE}Record: {internal.pb_utils.display_record(search.record)}```{msg.jump_url}"
+                            )
+                    except:
+                        pass
+                    finally:
+                        await msg.clear_reactions()
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload=None):

@@ -10,6 +10,7 @@ from pymongo.collation import Collation
 import internal.constants as constants
 import internal.pb_utils
 from database.WorldRecords import WorldRecords
+from database.MapData import MapData
 from internal.pb_utils import boards
 
 if len(sys.argv) > 1:
@@ -54,12 +55,20 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
             async for entry in WorldRecords.find(query).sort([("code", pymongo.ASCENDING)]):
 
+                map_data_connection = await MapData.find_one({"code": entry.code})
+                if map_data_connection:
+                    map_name = constants.PRETTY_NAMES[map_data_connection.map_name]
+                    creator = map_data_connection.creator
+                else:
+                    map_name = "Unknown"
+                    creator = "Unknown"
                 # Every 10th embed field, create a embed obj and add to a list
                 if row != 0 and (row % 10 == 0 or count - 1 == row):
 
                     embed.add_field(
-                        name=f"CODE: {entry.code} - LEVEL: {entry.level}",
-                        value=f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
+                        name=f"{entry.code} - {map_name} by {creator}",
+                        value=f"> Level: {entry.level}\n"
+                              f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
                               f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
                         inline=False,
                     )
@@ -69,8 +78,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 # Create embed fields for fields 1 thru 9
                 elif row % 10 != 0 or row == 0:
                     embed.add_field(
-                        name=f"CODE: {entry.code} - LEVEL: {entry.level}",
-                        value=f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
+                        name=f"{entry.code} - {map_name} by {creator}",
+                        value=f"> Level: {entry.level}\n"
+                              f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
                               f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
                         inline=False,
                     )

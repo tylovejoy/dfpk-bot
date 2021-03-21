@@ -2,6 +2,9 @@ import datetime
 import re
 
 import discord
+from disputils import BotEmbedPaginator
+from database.MapData import MapData
+import pymongo
 
 import internal.constants as constants
 from database.WorldRecords import WorldRecords
@@ -77,3 +80,49 @@ def format_timedelta(td):
         return '-' + format_timedelta(-td)
     else:
         return str(td)
+
+
+async def search_all_pbs(
+        ctx, query, name=""
+):
+    # init vars
+    row, embeds = 0, []
+
+    embed = discord.Embed(title=name)
+    count = await MapData.count_documents(query)
+
+    async for entry in MapData.find(query).sort([("code", pymongo.ASCENDING)]):
+
+        # Every 10th embed field, create a embed obj and add to a list
+        if row != 0 and (row % 10 == 0 or count - 1 == row):
+
+            embed.add_field(
+                name=f"{entry.code} - {entry.level}",
+                value=f"> Record: {entry.record}",
+                inline=False,
+            )
+            embeds.append(embed)
+            embed = discord.Embed(title=name)
+
+        # Create embed fields for fields 1 thru 9
+        elif row % 10 != 0 or row == 0:
+            embed.add_field(
+                name=f"{entry.code} - {entry.level}",
+                value=f"> Record: {entry.record}",
+                inline=False,
+            )
+
+        # If only one page
+        if count == 1:
+            embeds.append(embed)
+        row += 1
+
+    # Displays paginated embeds
+    if row:
+        paginator = BotEmbedPaginator(ctx, embeds)
+        await paginator.run()
+
+    else:
+        await ctx.send(
+            f"Nothing exists for {name}!"
+        )

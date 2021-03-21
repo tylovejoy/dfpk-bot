@@ -2,7 +2,9 @@ import re
 import sys
 
 import discord
+import pymongo
 from discord.ext import commands
+from disputils import BotEmbedPaginator
 from pymongo.collation import Collation
 
 import internal.constants as constants
@@ -34,12 +36,60 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         help="View personal best record for a particular map code.\n[name] is optional. Defaults to the user who used the command.\nUse [name] to find personal best of other users.",
         brief="View personal best record",
     )
-    async def pb(self, ctx, map_code, level, name=""):
+    async def pb(self, ctx, map_code="", level="", name=""):
         """Display personal best of a particular user, or author of command."""
         if name == "":
             name = ctx.author.name
         map_code = map_code.upper()
         level = level.upper()
+        if map_code == "":
+            query = {
+                "name": name
+            }
+            # init vars
+            row, embeds = 0, []
+
+            embed = discord.Embed(title=name)
+            count = await WorldRecords.count_documents(query)
+
+            async for entry in WorldRecords.find(query).sort([("code", pymongo.ASCENDING)]):
+
+                # Every 10th embed field, create a embed obj and add to a list
+                if row != 0 and (row % 10 == 0 or count - 1 == row):
+
+                    embed.add_field(
+                        name=f"CODE: {entry.code} - LEVEL: {entry.level}",
+                        value=f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
+                              f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
+                        inline=False,
+                    )
+                    embeds.append(embed)
+                    embed = discord.Embed(title=name)
+
+                # Create embed fields for fields 1 thru 9
+                elif row % 10 != 0 or row == 0:
+                    embed.add_field(
+                        name=f"CODE: {entry.code} - LEVEL: {entry.level}",
+                        value=f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
+                              f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
+                        inline=False,
+                    )
+
+                # If only one page
+                if count == 1:
+                    embeds.append(embed)
+                row += 1
+
+            # Displays paginated embeds
+            if row:
+                paginator = BotEmbedPaginator(ctx, embeds)
+                await paginator.run()
+
+            else:
+                await ctx.send(
+                    f"Nothing exists for {name}!"
+                )
+            return
         query = {
             "code": map_code,
             "name": name,

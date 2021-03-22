@@ -45,7 +45,14 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         level = level.upper()
         if map_code == "":
             query = {
-                "posted_by": ctx.author.id
+                "$or": [
+                    {
+                        "posted_by": ctx.author.id
+                    },
+                    {
+                        "name": ctx.author.name
+                    }
+                ]
             }
             # init vars
             row, embeds = 0, []
@@ -53,7 +60,8 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             embed = discord.Embed(title=name)
             count = await WorldRecords.count_documents(query)
 
-            async for entry in WorldRecords.find(query).sort([("code", pymongo.ASCENDING)]):
+            async for entry in WorldRecords.find(query).sort(
+                    [("code", pymongo.ASCENDING)]):
 
                 map_data_connection = await MapData.find_one({"code": entry.code})
                 if map_data_connection:
@@ -166,10 +174,10 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             level_checker = {}
             embed = discord.Embed(title=f"{title}")
             async for entry in (
-                WorldRecords.find({"code": map_code, "verified": True})
-                .sort([("level", 1), ("record", 1)])
-                .collation(Collation(locale="en_US", numericOrdering=True))
-                .limit(25)
+                    WorldRecords.find({"code": map_code, "verified": True})
+                            .sort([("level", 1), ("record", 1)])
+                            .collation(Collation(locale="en_US", numericOrdering=True))
+                            .limit(25)
             ):
                 if entry.level.upper() not in level_checker.keys():
                     level_checker[entry.level.upper()] = None
@@ -183,15 +191,15 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         else:
             title = f"{map_code} - LEVEL {level.upper()} - VERIFIED WORLD RECORD:\n"
             async for entry in (
-                WorldRecords.find(
-                    {
-                        "code": map_code,
-                        "level": re.compile(level, re.IGNORECASE),
-                        "verified": True,
-                    }
-                )
-                .sort("record", 1)
-                .limit(1)
+                    WorldRecords.find(
+                        {
+                            "code": map_code,
+                            "level": re.compile(level, re.IGNORECASE),
+                            "verified": True,
+                        }
+                    )
+                            .sort("record", 1)
+                            .limit(1)
             ):
                 exists = True
                 embed = discord.Embed(title=f"{title}")
@@ -221,10 +229,10 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
         level_checker = {}
         async for entry in (
-            WorldRecords.find({"code": map_code})
-            .sort([("level", 1)])
-            .collation(Collation(locale="en_US", numericOrdering=True))
-            .limit(30)
+                WorldRecords.find({"code": map_code})
+                        .sort([("level", 1)])
+                        .collation(Collation(locale="en_US", numericOrdering=True))
+                        .limit(30)
         ):
             if entry.level.upper() not in level_checker.keys():
                 level_checker[entry.level.upper()] = None

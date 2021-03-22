@@ -45,7 +45,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         level = level.upper()
         if map_code == "":
             query = {
-                "name": name
+                "posted_by": ctx.author.id
             }
             # init vars
             row, embeds = 0, []

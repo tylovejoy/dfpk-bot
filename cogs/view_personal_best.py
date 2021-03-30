@@ -111,7 +111,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         query = {
             "code": map_code,
             "name": name,
-            "level": re.compile(r"^" + re.escape(level), re.IGNORECASE),
+            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
         }
         if await WorldRecords.count_documents(query) == 1:
             search = await WorldRecords.find_one(query)
@@ -138,7 +138,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         """Display top 10 verified/unverified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
-        query = {"code": map_code, "level": re.compile(r"^" + re.escape(level), re.IGNORECASE)}
+        query = {"code": map_code, "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE)}
         await boards(ctx, map_code, level, title, query)
 
     # view leaderboard
@@ -153,7 +153,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"
         query = {
             "code": map_code,
-            "level": re.compile(r"^" + re.escape(level), re.IGNORECASE),
+            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
             "verified": True,
         }
         await boards(ctx, map_code, level.upper(), title, query)
@@ -194,7 +194,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     WorldRecords.find(
                         {
                             "code": map_code,
-                            "level": re.compile(r"^" + re.escape(level), re.IGNORECASE),
+                            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
                             "verified": True,
                         }
                     )

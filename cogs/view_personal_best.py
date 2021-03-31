@@ -175,9 +175,8 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             embed = discord.Embed(title=f"{title}")
             async for entry in (
                     WorldRecords.find({"code": map_code, "verified": True})
-                            .sort([("level", 1), ("record", 1)])
-                            .collation(Collation(locale="en_US", numericOrdering=True))
-                            .limit(25)
+                                .sort([("level", 1), ("record", 1)])
+                                .collation(Collation(locale="en_US", numericOrdering=True))
             ):
                 if entry.level.upper() not in level_checker.keys():
                     level_checker[entry.level.upper()] = None

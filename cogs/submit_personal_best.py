@@ -81,7 +81,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         submission = await WorldRecords.find_one(
             {
                 "code": map_code,
-                "level": re.compile(level, re.IGNORECASE),
+                "level": re.compile(re.escape(level), re.IGNORECASE),
                 "posted_by": ctx.author.id,
             }
         )
@@ -159,7 +159,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 # Find top 10 records and display submission's place in top 10.
                 top_10 = (
                     WorldRecords.find(
-                        {"code": map_code, "level": re.compile(level, re.IGNORECASE)}
+                        {"code": map_code, "level": re.compile(re.escape(level), re.IGNORECASE)}
                     )
                     .sort("record", 1)
                     .limit(10)
@@ -200,7 +200,7 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         search = await WorldRecords.find_one(
             {
                 "code": map_code,
-                "level": re.compile(level, re.IGNORECASE),
+                "level": re.compile(re.escape(level), re.IGNORECASE),
                 "name": name,
             }
         )

@@ -165,6 +165,8 @@ def convert_short_types(map_type):
         return "MILDCORE"
     elif map_type in ["TA", "TIMEATTACK", "TIME-ATTACK"]:
         return "TIME-ATTACK"
+    elif map_type in ["FRAMEWORK", "FW"]:
+        return "FRAMEWORK"
     return map_type
 
 

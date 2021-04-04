@@ -11,6 +11,7 @@ TYPES_OF_MAP = [
     "OUT-OF-MAP",
     "ABLOCK",
     "NOSTALGIA",
+    "FRAMEWORK"
 ]
 
 # The amount of servers required for a bot to be eligible for verification.

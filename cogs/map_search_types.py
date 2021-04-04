@@ -220,6 +220,17 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
             await ctx.send(f"{code} does not exist!")
 
     @commands.command(
+        help="Display all frameworks",
+        brief="Display all frameworks",
+        aliases=["FW"],
+    )
+    async def framework(self, ctx):
+        """Search for and display all frameworks."""
+        map_name = "Frameworks"
+        query = {"type": "FRAMEWORK"}
+        await searchmap(ctx, query, map_name=map_name)
+
+    @commands.command(
         help="Display all megamaps",
         brief="Display all megamaps",
     )

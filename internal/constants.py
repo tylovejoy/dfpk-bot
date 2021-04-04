@@ -81,6 +81,7 @@ WORKSHOPEXPANSE = ["workshopexpanse", "expanse"]
 WORKSHOPGREENSCREEN = ["workshopgreenscreen", "green", "greenscreen"]
 WORKSHOPISLAND = ["workshopisland", "island"]
 PRACTICERANGE = ["practicerange", "practice", "pr"]
+FRAMEWORK = ["framework", "fw"]
 
 # combined map names
 ALL_MAP_NAMES = [
@@ -118,6 +119,7 @@ ALL_MAP_NAMES = [
     WORKSHOPEXPANSE,
     WORKSHOPGREENSCREEN,
     WORKSHOPISLAND,
+    FRAMEWORK,
 ]
 
 PRETTY_NAMES = {
@@ -155,4 +157,5 @@ PRETTY_NAMES = {
     "workshopgreenscreen": "Workshop Greenscreen",
     "workshopisland": "Workshop Island",
     "practicerange": "Practice Range",
+    "framework": "Framework"
 }

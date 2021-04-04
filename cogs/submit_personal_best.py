@@ -32,12 +32,12 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
     # Submit personal best records
     @commands.command(
         help=(
-            "Submit personal bests. Upload a screenshot with this message for proof!\n"
-            "There will be a link to the original post when using the `/pb` command.\n"
-            "Also updates a personal best if it is faster.\n\n"
-            "<record> must be in HH:MM:SS.SS format! You can omit the hours or minutes.\n\n"
-            "Use quotation marks around level names that have spaces.\n\n"
-            "A list of previously submitted level names will appear on confirmation message."
+                "Submit personal bests. Upload a screenshot with this message for proof!\n"
+                "There will be a link to the original post when using the `/pb` command.\n"
+                "Also updates a personal best if it is faster.\n\n"
+                "<record> must be in HH:MM:SS.SS format! You can omit the hours or minutes.\n\n"
+                "Use quotation marks around level names that have spaces.\n\n"
+                "A list of previously submitted level names will appear on confirmation message."
         ),
         brief="Submit personal best",
     )
@@ -62,10 +62,10 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         # Find currently associated levels
         level_checker = {}
         async for entry in (
-            WorldRecords.find({"code": map_code})
-            .sort([("level", 1), ("record", 1)])
-            .collation(Collation(locale="en_US", numericOrdering=True))
-            .limit(30)
+                WorldRecords.find({"code": map_code})
+                        .sort([("level", 1), ("record", 1)])
+                        .collation(Collation(locale="en_US", numericOrdering=True))
+                        .limit(30)
         ):
             if entry.level.upper() not in level_checker.keys():
                 level_checker[entry.level.upper()] = None
@@ -159,10 +159,11 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
                 # Find top 10 records and display submission's place in top 10.
                 top_10 = (
                     WorldRecords.find(
-                        {"code": map_code, "level": re.compile(re.escape(level), re.IGNORECASE)}
+                        {"code": map_code,
+                         "level": re.compile(re.escape(level), re.IGNORECASE)}
                     )
-                    .sort("record", 1)
-                    .limit(10)
+                        .sort("record", 1)
+                        .limit(10)
                 )
                 en = stream.enumerate(top_10)
                 async with en.stream() as streamer:
@@ -226,13 +227,15 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
             )
             return
 
-        if search.posted_by != ctx.author.id or not bool(
-            any(role.id in constants_bot.ROLE_WHITELIST for role in ctx.author.roles)
-        ):
-            await ctx.channel.send(
-                "You do not have sufficient permissions. Personal best was not deleted."
-            )
-            return
+        if search.posted_by != ctx.author.id:
+            if not bool(
+                    any(role.id in constants_bot.ROLE_WHITELIST for role in
+                        ctx.author.roles)
+            ):
+                await ctx.channel.send(
+                    "You do not have sufficient permissions. Personal best was not deleted."
+                )
+                return
 
         embed = discord.Embed(title="Do you want to delete this?")
         embed.add_field(

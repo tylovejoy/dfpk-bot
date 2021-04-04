@@ -196,14 +196,29 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         # Searches for author PB if none provided
         if name == "":
             name = ctx.author.name
-
-        search = await WorldRecords.find_one(
-            {
-                "code": map_code,
-                "level": re.compile(re.escape(level), re.IGNORECASE),
-                "name": name,
-            }
-        )
+            name_id = ctx.author.id
+            search = await WorldRecords.find_one(
+                {
+                    "code": map_code,
+                    "level": re.compile(re.escape(level), re.IGNORECASE),
+                    "$or": [
+                        {
+                            "posted_by": name_id
+                        },
+                        {
+                            "name": name
+                        }
+                    ]
+                }
+            )
+        else:
+            search = await WorldRecords.find_one(
+                {
+                    "code": map_code,
+                    "level": re.compile(re.escape(level), re.IGNORECASE),
+                    "name": name,
+                }
+            )
 
         if not search:
             await ctx.channel.send(

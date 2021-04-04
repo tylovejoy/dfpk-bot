@@ -194,7 +194,7 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
     )
     async def creator(self, ctx, creator):
         """Search for and display maps by a certain creator."""
-        query = {"creator": re.compile(creator, re.IGNORECASE)}
+        query = {"creator": re.compile(re.escape(creator), re.IGNORECASE)}
         await searchmap(ctx, query, creator=creator.capitalize())
 
     @commands.command(

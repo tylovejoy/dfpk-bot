@@ -1,8 +1,6 @@
 import asyncio
 import logging
-from pathlib import Path
 
-# noinspection PyPackageRequirements
 import discord
 from discord.ext import commands
 from pretty_help import PrettyHelp

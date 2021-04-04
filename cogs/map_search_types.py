@@ -227,7 +227,16 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
     async def framework(self, ctx):
         """Search for and display all frameworks."""
         map_name = "Frameworks"
-        query = {"type": "FRAMEWORK"}
+        query = {
+            "$or": [
+                {
+                    "type": "FRAMEWORK"
+                },
+                {
+                    "map_name": "FRAMEWORK"
+                }
+            ]
+        }
         await searchmap(ctx, query, map_name=map_name)
 
     @commands.command(

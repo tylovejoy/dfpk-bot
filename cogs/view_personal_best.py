@@ -47,9 +47,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             query = {
                 "$or": [
                     {
-                        "posted_by": {
-                            "$numberLong": ctx.author.id
-                        }
+                        "posted_by": bson.int64.Int64(ctx.author.id)
                     },
                     {
                         "name": ctx.author.name

@@ -62,15 +62,17 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             cur_map = ""
             field_string = ""
             title = ""
-            doubled = True
+            field_counter = 0
             map_set = set()
-            async for entry in WorldRecords.find(query).sort(
+            async for entry in WorldRecords.find(query, {"_id": False, "code": True}).sort(
                     [("code", pymongo.ASCENDING)]):
                 map_set.add(entry.code)
+
             async for entry in WorldRecords.find(query).sort(
                     [("code", pymongo.ASCENDING)]):
 
-                map_data_connection = await MapData.find_one({"code": entry.code})
+                map_data_connection = await MapData.find_one({"code": entry.code}, {"_id": False, "code": True, "map_name": True, "creator": True})
+
                 if map_data_connection:
                     map_name = constants.PRETTY_NAMES[map_data_connection.map_name]
                     creator = map_data_connection.creator
@@ -80,15 +82,15 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 if cur_map != entry.code:
                     if row != 0:
                         embed.add_field(name=title, value=field_string, inline=False)
-                        doubled = not doubled
-                        if doubled is True or len(map_set) < 3:
+                        field_counter += 1
+                        if field_counter % 3 == 0 or len(map_set) < 3:
                             embeds.append(embed)
                             embed = discord.Embed(title=name)
                     field_string = ""
-                    title = f"{entry.code} - {map_name} by {creator}"
+                    title = f"{entry.code} - {map_name} by {creator}\n"
                     cur_map = entry.code
 
-                field_string += f"> Level: {entry.level}\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━\n"
+                field_string += f"> **Level: {entry.level}**\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━━━\n"
                 row += 1
 
             # Displays paginated embeds

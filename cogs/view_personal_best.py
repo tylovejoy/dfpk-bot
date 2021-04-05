@@ -59,7 +59,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
             embed = discord.Embed(title=name)
             count = await WorldRecords.count_documents(query)
-
+            cur_map = ""
+            field_string = ""
+            title = ""
             async for entry in WorldRecords.find(query).sort(
                     [("code", pymongo.ASCENDING)]):
 
@@ -70,32 +72,43 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 else:
                     map_name = "Unknown"
                     creator = "Unknown"
+                if cur_map != entry.code:
+                    if row != 0:
+                        embed.add_field(name=title, value=field_string, inline=False)
+                        embeds.append(embed)
+                        embed = discord.Embed(title=name)
+                    field_string = ""
+                    title = f"{entry.code} - {map_name} by {creator}"
+                    cur_map = entry.code
+
+                field_string += f"> Level: {entry.level}\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n\n"
+
                 # Every 10th embed field, create a embed obj and add to a list
-                if row != 0 and (row % 10 == 0 or count - 1 == row):
-
-                    embed.add_field(
-                        name=f"{entry.code} - {map_name} by {creator}",
-                        value=f"> Level: {entry.level}\n"
-                              f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
-                              f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
-                        inline=False,
-                    )
-                    embeds.append(embed)
-                    embed = discord.Embed(title=name)
-
-                # Create embed fields for fields 1 thru 9
-                elif row % 10 != 0 or row == 0:
-                    embed.add_field(
-                        name=f"{entry.code} - {map_name} by {creator}",
-                        value=f"> Level: {entry.level}\n"
-                              f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
-                              f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
-                        inline=False,
-                    )
+                # if row != 0 and (row % 10 == 0 or count - 1 == row):
+                #
+                #     embed.add_field(
+                #         name=f"{entry.code} - {map_name} by {creator}",
+                #         value=f"> Level: {entry.level}\n"
+                #               f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
+                #               f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n",
+                #         inline=False,
+                #     )
+                #     embeds.append(embed)
+                #     embed = discord.Embed(title=name)
+                #
+                # # Create embed fields for fields 1 thru 9
+                # elif row % 10 != 0 or row == 0:
+                #     embed.add_field(
+                #         name=f"{entry.code} - {map_name} by {creator}",
+                #         value=f"> Level: {entry.level}\n"
+                #               f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
+                #               f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
+                #         inline=False,
+                #     )
 
                 # If only one page
-                if count == 1:
-                    embeds.append(embed)
+                #if count == 1:
+                #    embeds.append(embed)
                 row += 1
 
             # Displays paginated embeds
@@ -111,7 +124,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         query = {
             "code": map_code,
             "name": name,
-            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
+            "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE),
         }
         if await WorldRecords.count_documents(query) == 1:
             search = await WorldRecords.find_one(query)
@@ -138,7 +151,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         """Display top 10 verified/unverified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
-        query = {"code": map_code, "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE)}
+        query = {"code": map_code, "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE)}
         await boards(ctx, map_code, level, title, query)
 
     # view leaderboard
@@ -153,7 +166,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"
         query = {
             "code": map_code,
-            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
+            "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE),
             "verified": True,
         }
         await boards(ctx, map_code, level.upper(), title, query)
@@ -193,13 +206,14 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     WorldRecords.find(
                         {
                             "code": map_code,
-                            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
+                            "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE),
                             "verified": True,
                         }
                     )
                             .sort("record", 1)
                             .limit(1)
             ):
+                title = f"{map_code} - LEVEL {entry.level.upper()} - VERIFIED WORLD RECORD:\n"
                 exists = True
                 embed = discord.Embed(title=f"{title}")
                 embed.add_field(

@@ -81,7 +81,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 if row != 0:
                     embed.add_field(name=title, value=field_string, inline=False)
                     field_counter += 1
-                    if field_counter % 3 == 0 or len(map_set) < 3 or count == 1:
+                    if field_counter % 3 == 0 or len(map_set) < 3:
                         embeds.append(embed)
                         embed = discord.Embed(title=name)
                 field_string = ""
@@ -90,6 +90,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
             field_string += f"> **Level: {entry.level}**\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━━━\n"
             row += 1
+            if count == 1:
+                embed.add_field(name=title, value=field_string, inline=False)
+                embeds.append(embed)
 
         # Displays paginated embeds
         if row:

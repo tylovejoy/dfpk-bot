@@ -63,10 +63,10 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             field_string = ""
             title = ""
             doubled = True
-            map_set = set()
-            async for entry in WorldRecords.find(query).sort(
-                    [("code", pymongo.ASCENDING)]):
-                map_set.add(entry.code)
+            # map_set = set()
+            # async for entry in WorldRecords.find(query).sort(
+            #         [("code", pymongo.ASCENDING)]):
+            #     map_set.add(entry.code)
             async for entry in WorldRecords.find(query).sort(
                     [("code", pymongo.ASCENDING)]):
 
@@ -81,7 +81,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     if row != 0:
                         embed.add_field(name=title, value=field_string, inline=False)
                         doubled = not doubled
-                        if doubled is True or len(map_set) < 3:
+                        if doubled is True:
                             embeds.append(embed)
                             embed = discord.Embed(title=name)
                     field_string = ""

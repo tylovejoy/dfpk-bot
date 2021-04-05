@@ -62,6 +62,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             cur_map = ""
             field_string = ""
             title = ""
+            doubled = True
             async for entry in WorldRecords.find(query).sort(
                     [("code", pymongo.ASCENDING)]):
 
@@ -75,40 +76,15 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 if cur_map != entry.code:
                     if row != 0:
                         embed.add_field(name=title, value=field_string, inline=False)
-                        embeds.append(embed)
-                        embed = discord.Embed(title=name)
+                        doubled = not doubled
+                        if doubled is True:
+                            embeds.append(embed)
+                            embed = discord.Embed(title=name)
                     field_string = ""
                     title = f"{entry.code} - {map_name} by {creator}"
                     cur_map = entry.code
 
-                field_string += f"> Level: {entry.level}\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n\n"
-
-                # Every 10th embed field, create a embed obj and add to a list
-                # if row != 0 and (row % 10 == 0 or count - 1 == row):
-                #
-                #     embed.add_field(
-                #         name=f"{entry.code} - {map_name} by {creator}",
-                #         value=f"> Level: {entry.level}\n"
-                #               f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
-                #               f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n",
-                #         inline=False,
-                #     )
-                #     embeds.append(embed)
-                #     embed = discord.Embed(title=name)
-                #
-                # # Create embed fields for fields 1 thru 9
-                # elif row % 10 != 0 or row == 0:
-                #     embed.add_field(
-                #         name=f"{entry.code} - {map_name} by {creator}",
-                #         value=f"> Level: {entry.level}\n"
-                #               f"> Record: {internal.pb_utils.display_record(entry.record)}\n"
-                #               f"> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}",
-                #         inline=False,
-                #     )
-
-                # If only one page
-                #if count == 1:
-                #    embeds.append(embed)
+                field_string += f"> Level: {entry.level}\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━\n"
                 row += 1
 
             # Displays paginated embeds

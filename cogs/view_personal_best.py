@@ -43,18 +43,12 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             name = ctx.author.name
             query = {
                 "$or": [
-                    {
-                        "posted_by": bson.int64.Int64(ctx.author.id)
-                    },
-                    {
-                        "name": ctx.author.name
-                    }
+                    {"posted_by": bson.int64.Int64(ctx.author.id)},
+                    {"name": ctx.author.name},
                 ]
             }
         else:
-            query = {
-                "name": re.compile(re.escape(name), re.IGNORECASE)
-            }
+            query = {"name": re.compile(re.escape(name), re.IGNORECASE)}
         # init vars
         row, embeds = 0, []
 
@@ -65,13 +59,16 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         field_counter = 0
         map_set = set()
         async for entry in WorldRecords.find(query, {"_id": False, "code": True}).sort(
-                [("code", pymongo.ASCENDING)]):
+            [("code", pymongo.ASCENDING)]
+        ):
             map_set.add(entry.code)
 
-        async for entry in WorldRecords.find(query).sort(
-                [("code", pymongo.ASCENDING)]):
+        async for entry in WorldRecords.find(query).sort([("code", pymongo.ASCENDING)]):
 
-            map_data_connection = await MapData.find_one({"code": entry.code}, {"_id": False, "code": True, "map_name": True, "creator": True})
+            map_data_connection = await MapData.find_one(
+                {"code": entry.code},
+                {"_id": False, "code": True, "map_name": True, "creator": True},
+            )
 
             if map_data_connection:
                 map_name = constants.PRETTY_NAMES[map_data_connection.map_name]
@@ -100,11 +97,8 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             await paginator.run()
 
         else:
-            await ctx.send(
-                f"Nothing exists for {name}!"
-            )
+            await ctx.send(f"Nothing exists for {name}!")
         return
-
 
     # view scoreboard
     @commands.command(
@@ -116,7 +110,12 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         """Display top 10 verified/unverified records for a particular level."""
         map_code = map_code.upper()
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
-        query = {"code": map_code, "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE)}
+        query = {
+            "code": map_code,
+            "level": re.compile(
+                r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE
+            ),
+        }
         await boards(ctx, map_code, level, title, query)
 
     # view leaderboard
@@ -131,7 +130,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"
         query = {
             "code": map_code,
-            "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE),
+            "level": re.compile(
+                r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE
+            ),
             "verified": True,
         }
         await boards(ctx, map_code, level.upper(), title, query)
@@ -152,9 +153,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             level_checker = {}
             embed = discord.Embed(title=f"{title}")
             async for entry in (
-                    WorldRecords.find({"code": map_code, "verified": True})
-                                .sort([("level", 1), ("record", 1)])
-                                .collation(Collation(locale="en_US", numericOrdering=True))
+                WorldRecords.find({"code": map_code, "verified": True})
+                .sort([("level", 1), ("record", 1)])
+                .collation(Collation(locale="en_US", numericOrdering=True))
             ):
                 if entry.level.upper() not in level_checker.keys():
                     level_checker[entry.level.upper()] = None
@@ -168,15 +169,17 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         else:
             title = f"{map_code} - LEVEL {level.upper()} - VERIFIED WORLD RECORD:\n"
             async for entry in (
-                    WorldRecords.find(
-                        {
-                            "code": map_code,
-                            "level": re.compile(r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE),
-                            "verified": True,
-                        }
-                    )
-                            .sort("record", 1)
-                            .limit(1)
+                WorldRecords.find(
+                    {
+                        "code": map_code,
+                        "level": re.compile(
+                            r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE
+                        ),
+                        "verified": True,
+                    }
+                )
+                .sort("record", 1)
+                .limit(1)
             ):
                 title = f"{map_code} - LEVEL {entry.level.upper()} - VERIFIED WORLD RECORD:\n"
                 exists = True
@@ -207,10 +210,10 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
         level_checker = {}
         async for entry in (
-                WorldRecords.find({"code": map_code})
-                        .sort([("level", 1)])
-                        .collation(Collation(locale="en_US", numericOrdering=True))
-                        .limit(30)
+            WorldRecords.find({"code": map_code})
+            .sort([("level", 1)])
+            .collation(Collation(locale="en_US", numericOrdering=True))
+            .limit(30)
         ):
             if entry.level.upper() not in level_checker.keys():
                 level_checker[entry.level.upper()] = None

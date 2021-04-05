@@ -77,14 +77,12 @@ def check_negative(s):
 
 def format_timedelta(td):
     if datetime.timedelta(seconds=td) < datetime.timedelta(0):
-        return '-' + format_timedelta(-td)
+        return "-" + format_timedelta(-td)
     else:
         return str(td)
 
 
-async def search_all_pbs(
-        ctx, query, name=""
-):
+async def search_all_pbs(ctx, query, name=""):
     # init vars
     row, embeds = 0, []
 
@@ -123,8 +121,4 @@ async def search_all_pbs(
         await paginator.run()
 
     else:
-        await ctx.send(
-            f"Nothing exists for {name}!"
-        )
-
-
+        await ctx.send(f"Nothing exists for {name}!")

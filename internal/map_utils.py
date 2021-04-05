@@ -15,7 +15,7 @@ else:
 
 
 async def searchmap(
-        ctx, query: dict, map_type="", map_name="", creator="", map_code=""
+    ctx, query: dict, map_type="", map_name="", creator="", map_code=""
 ):
     """Search database for query and displays it.
 
@@ -144,7 +144,7 @@ async def map_edit_checks(ctx, map_code, search) -> int:
     # Only allow original poster OR whitelisted roles to delete.
     if search.posted_by != ctx.author.id:
         if not bool(
-                any(role.id in constants_bot.ROLE_WHITELIST for role in ctx.author.roles)
+            any(role.id in constants_bot.ROLE_WHITELIST for role in ctx.author.roles)
         ):
             await ctx.channel.send(
                 "You do not have sufficient permissions. Map was not deleted."

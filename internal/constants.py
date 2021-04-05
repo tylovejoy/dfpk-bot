@@ -11,7 +11,7 @@ TYPES_OF_MAP = [
     "OUT-OF-MAP",
     "ABLOCK",
     "NOSTALGIA",
-    "FRAMEWORK"
+    "FRAMEWORK",
 ]
 
 # The amount of servers required for a bot to be eligible for verification.
@@ -157,5 +157,5 @@ PRETTY_NAMES = {
     "workshopgreenscreen": "Workshop Greenscreen",
     "workshopisland": "Workshop Island",
     "practicerange": "Practice Range",
-    "framework": "Framework"
+    "framework": "Framework",
 }

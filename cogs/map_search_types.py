@@ -157,7 +157,6 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
         """
         embed = discord.Embed(title="Newest Maps")
 
-
         row = 0
         query = {}
         map_type = convert_short_types(map_type.upper())
@@ -175,7 +174,9 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
         #     constants.NEWEST_MAPS_LIMIT
         # ):
         async for entry in MapData.find(query).skip(
-                (count - constants.NEWEST_MAPS_LIMIT) if count > constants.NEWEST_MAPS_LIMIT else 0
+            (count - constants.NEWEST_MAPS_LIMIT)
+            if count > constants.NEWEST_MAPS_LIMIT
+            else 0
         ):
             embed.add_field(
                 name=f"{entry.code} - {constants.PRETTY_NAMES[entry.map_name]}",
@@ -227,16 +228,7 @@ class MapSearchTypes(commands.Cog, name="Map Search"):
     async def framework(self, ctx):
         """Search for and display all frameworks."""
         map_name = "Frameworks"
-        query = {
-            "$or": [
-                {
-                    "type": "FRAMEWORK"
-                },
-                {
-                    "map_name": "FRAMEWORK"
-                }
-            ]
-        }
+        query = {"$or": [{"type": "FRAMEWORK"}, {"map_name": "FRAMEWORK"}]}
         await searchmap(ctx, query, map_name=map_name)
 
     @commands.command(

@@ -62,7 +62,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             [("code", pymongo.ASCENDING)]
         ):
             map_set.add(entry.code)
-
+        count = await WorldRecords.count_documents(query)
         async for entry in WorldRecords.find(query).sort([("code", pymongo.ASCENDING)]):
 
             map_data_connection = await MapData.find_one(
@@ -81,7 +81,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                 if row != 0:
                     embed.add_field(name=title, value=field_string, inline=False)
                     field_counter += 1
-                    if field_counter % 3 == 0 or len(map_set) < 3:
+                    if field_counter % 3 == 0 or len(map_set) < 3 or count == 1:
                         embeds.append(embed)
                         embed = discord.Embed(title=name)
                 field_string = ""

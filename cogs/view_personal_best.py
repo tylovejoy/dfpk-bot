@@ -121,7 +121,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         query = {
             "code": map_code,
             "level": re.compile(
-                r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE
+                r"^" + re.escape(level) + r"$", re.IGNORECASE
             ),
         }
         await boards(ctx, map_code, level, title, query)
@@ -139,7 +139,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         query = {
             "code": map_code,
             "level": re.compile(
-                r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE
+                r"^" + re.escape(level) + r"$", re.IGNORECASE
             ),
             "verified": True,
         }
@@ -181,7 +181,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     {
                         "code": map_code,
                         "level": re.compile(
-                            r"(?<!.)" + re.escape(level) + r"(?=\s)", re.IGNORECASE
+                            r"^" + re.escape(level) + r"$", re.IGNORECASE
                         ),
                         "verified": True,
                     }

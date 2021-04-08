@@ -1,5 +1,6 @@
 import re
 import sys
+
 import bson
 import discord
 import pymongo
@@ -9,8 +10,8 @@ from pymongo.collation import Collation
 
 import internal.constants as constants
 import internal.pb_utils
-from database.WorldRecords import WorldRecords
 from database.MapData import MapData
+from database.WorldRecords import WorldRecords
 from internal.pb_utils import boards
 
 if len(sys.argv) > 1:
@@ -37,10 +38,11 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         help="View personal best record for a particular map code.\n[name] is optional. Defaults to the user who used the command.\nUse [name] to find personal best of other users.",
         brief="View personal best record",
     )
-    async def pb(self, ctx, name=""):
+    async def pb(self, ctx, name=None):
         """Display personal best of a particular user, or author of command."""
-        if name == "":
-            name = ctx.author.name
+
+        # Query for own PBs (w/ no name arg) or another's PBs
+        if name is None:
             query = {
                 "$or": [
                     {"posted_by": bson.int64.Int64(ctx.author.id)},
@@ -49,64 +51,48 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             }
         else:
             query = {"name": re.compile(re.escape(name), re.IGNORECASE)}
-        # init vars
-        row, embeds = 0, []
 
-        embed = discord.Embed(title=name)
-        cur_map = ""
-        field_string = ""
-        title = ""
-        field_counter = 0
-        map_set = set()
-        async for entry in WorldRecords.find(query, {"_id": False, "code": True}).sort(
-            [("code", pymongo.ASCENDING)]
-        ):
-            map_set.add(entry.code)
-        count = await WorldRecords.count_documents(query)
-        async for entry in WorldRecords.find(query).sort([("code", pymongo.ASCENDING)]):
-
-            map_data_connection = await MapData.find_one(
-                {"code": entry.code},
-                {"_id": False, "code": True, "map_name": True, "creator": True},
-            )
-
-            if map_data_connection:
-                map_name = constants.PRETTY_NAMES[map_data_connection.map_name]
-                creator = map_data_connection.creator
-            else:
-                map_name = "Unknown"
-                creator = "Unknown"
-
-            if cur_map != entry.code:
-
-                if row != 0:
-                    embed.add_field(name=title, value=field_string, inline=False)
-
-                    if field_counter % 3 == 0 or len(map_set) < 3:
-                        embeds.append(embed)
-                        embed = discord.Embed(title=name)
-                        row += 1
-                field_string = ""
-                title = f"{entry.code} - {map_name} by {creator}\n"
+        embed_dict = {}
+        cur_map = None
+        async for entry in WorldRecords.find(query, {"_id": False, "url": False, "hidden_id": False, "message_id": False, "posted_by": False}).sort([("code", pymongo.ASCENDING), ("level", pymongo.ASCENDING)]):
+            # Find if map_code for PB is in MapData to display map name and creator name.
+            if entry.code != cur_map:
                 cur_map = entry.code
+                map_data_connection = await MapData.find_one(
+                    {"code": entry.code},
+                    {"_id": False, "code": True, "map_name": True, "creator": True},
+                )
+                if map_data_connection:
+                    map_name = constants.PRETTY_NAMES[map_data_connection.map_name]
+                    creator = map_data_connection.creator
+                else:
+                    map_name = "Needs Map"
+                    creator = "Needs Author"
 
-            field_string += f"> **Level: {entry.level}**\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━━━\n"
-            field_counter += 1
-            row += 1
-            if count == 1 or row-1 == count:
-                embed.add_field(name=title, value=field_string, inline=False)
-                embeds.append(embed)
+            # Create a dict of all the indivudal map_codes and the PBs for each map_code
+            if embed_dict.get(str(entry.code), None) is None:
+                embed_dict[str(entry.code)] = {
+                    "title": f"{entry.code} - {map_name} by {creator}\n",
+                    "value": ""
+                }
+            embed_dict[str(entry.code)]["value"] += f"> **Level: {entry.level}**\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━━━\n"
 
+        embeds = []
+        embed = discord.Embed(title=name)
 
+        if len(embed_dict) > 0:
+            for i, map_pbs in enumerate(embed_dict.values()):
+                embed.add_field(name=map_pbs["title"], value=map_pbs["value"],
+                                inline=False)
+                if (i + 1) % 3 == 0 or (i + 1) == len(embed_dict):
+                    embeds.append(embed)
+                    embed = discord.Embed(title=name)
 
-        # Displays paginated embeds
-        if row:
+        if embeds:
             paginator = BotEmbedPaginator(ctx, embeds)
             await paginator.run()
-
         else:
             await ctx.send(f"Nothing exists for {name}!")
-        return
 
     # view scoreboard
     @commands.command(
@@ -175,7 +161,6 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     )
 
         else:
-            title = f"{map_code} - LEVEL {level.upper()} - VERIFIED WORLD RECORD:\n"
             async for entry in (
                 WorldRecords.find(
                     {

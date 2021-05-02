@@ -31,7 +31,9 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
     async def cog_check(self, ctx):
         """Check if channel is RECORD_CHANNEL."""
-        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID or (
+            ctx.guild is None
+        ):
             return True
 
     @commands.command(

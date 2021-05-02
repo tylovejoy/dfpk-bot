@@ -25,6 +25,8 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
         if ctx.channel.id in (
             constants_bot.MAP_CHANNEL_ID,
             constants_bot.MAP_SUBMIT_CHANNEL_ID,
+        ) or (
+            ctx.guild is None
         ):
             return True
 

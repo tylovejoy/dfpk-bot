@@ -20,7 +20,9 @@ class MapSearch(commands.Cog, name="Map Search"):
 
     async def cog_check(self, ctx):
         """Check if command is used in MAP_CHANNEL."""
-        if ctx.channel.id == constants_bot.MAP_CHANNEL_ID:
+        if ctx.channel.id == constants_bot.MAP_CHANNEL_ID or (
+            ctx.guild is None
+        ):
             return True
 
     @commands.command(

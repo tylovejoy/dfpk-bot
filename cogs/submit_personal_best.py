@@ -87,7 +87,11 @@ class SubmitPersonalBest(commands.Cog, name="Personal best submission/deletion")
         )
 
         # If document is found, verifies if submitted time is faster (if verified).
-        if submission and record_in_seconds >= submission.record and submission.verified is True:
+        if (
+            submission
+            and record_in_seconds >= submission.record
+            and submission.verified is True
+        ):
             await ctx.channel.send("Personal best needs to be faster to update.")
             return
 

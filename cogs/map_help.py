@@ -22,11 +22,13 @@ class MapHelp(commands.Cog, name="Helpful Map Commands"):
 
     async def cog_check(self, ctx):
         """Check if commands are used in MAP_CHANNEL and MAP_SUBMIT_CHANNEL."""
-        if ctx.channel.id in (
-            constants_bot.MAP_CHANNEL_ID,
-            constants_bot.MAP_SUBMIT_CHANNEL_ID,
-        ) or (
-            ctx.guild is None
+        if (
+            ctx.channel.id
+            in (
+                constants_bot.MAP_CHANNEL_ID,
+                constants_bot.MAP_SUBMIT_CHANNEL_ID,
+            )
+            or (ctx.guild is None)
         ):
             return True
 

@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-
+from natsort import natsorted
 import bson
 import discord
 import pymongo
@@ -32,9 +32,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
     async def cog_check(self, ctx):
         """Check if channel is RECORD_CHANNEL."""
-        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID or (
-            ctx.guild is None
-        ):
+        if ctx.channel.id == constants_bot.RECORD_CHANNEL_ID or (ctx.guild is None):
             return True
 
     @commands.command(
@@ -57,7 +55,16 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
         embed_dict = {}
         cur_map = None
-        async for entry in WorldRecords.find(query, {"_id": False, "url": False, "hidden_id": False, "message_id": False, "posted_by": False}).sort([("code", pymongo.ASCENDING), ("level", pymongo.ASCENDING)]):
+        async for entry in WorldRecords.find(
+            query,
+            {
+                "_id": False,
+                "url": False,
+                "hidden_id": False,
+                "message_id": False,
+                "posted_by": False,
+            },
+        ).sort([("code", pymongo.ASCENDING), ("level", pymongo.ASCENDING)]):
             # Find if map_code for PB is in MapData to display map name and creator name.
             if entry.code != cur_map:
                 cur_map = entry.code
@@ -76,9 +83,11 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
             if embed_dict.get(str(entry.code), None) is None:
                 embed_dict[str(entry.code)] = {
                     "title": f"{entry.code} - {map_name} by {creator}\n",
-                    "value": ""
+                    "value": "",
                 }
-            embed_dict[str(entry.code)]["value"] += f"> **Level: {entry.level}**\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━━━\n"
+            embed_dict[str(entry.code)][
+                "value"
+            ] += f"> **Level: {entry.level}**\n> Record: {internal.pb_utils.display_record(entry.record)}\n> Verified: {constants.VERIFIED_EMOJI if entry.verified is True else constants.NOT_VERIFIED_EMOJI}\n━━━━━━━━━━━━\n"
 
         embeds = []
         embed = discord.Embed(title=name)
@@ -91,17 +100,23 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
                     # and divide in half.. Add two fields instead of just one.
                     delimiter_regex = r">.*\n>.*\n>.*\n━━━━━━━━━━━━\n"
                     pb_split = re.findall(delimiter_regex, map_pbs["value"])
-                    pb_split_1 = pb_split[:len(pb_split) // 2]
-                    pb_split_2 = pb_split[len(pb_split) // 2:]
-                    embed.add_field(name=f"{map_pbs['title']} (1)",
-                                    value="".join(pb_split_1),
-                                    inline=False)
-                    embed.add_field(name=f"{map_pbs['title']} (2)",
-                                    value="".join(pb_split_2),
-                                    inline=False)
+                    pb_split = natsorted(pb_split)
+                    pb_split_1 = pb_split[: len(pb_split) // 2]
+                    pb_split_2 = pb_split[len(pb_split) // 2 :]
+                    embed.add_field(
+                        name=f"{map_pbs['title']} (1)",
+                        value="".join(pb_split_1),
+                        inline=False,
+                    )
+                    embed.add_field(
+                        name=f"{map_pbs['title']} (2)",
+                        value="".join(pb_split_2),
+                        inline=False,
+                    )
                 else:
-                    embed.add_field(name=map_pbs["title"], value=map_pbs["value"],
-                                    inline=False)
+                    embed.add_field(
+                        name=map_pbs["title"], value=map_pbs["value"], inline=False
+                    )
                 if (i + 1) % 3 == 0 or (i + 1) == len(embed_dict):
                     embeds.append(embed)
                     embed = discord.Embed(title=name)
@@ -124,9 +139,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED/UNVERIFIED RECORDS:\n"
         query = {
             "code": map_code,
-            "level": re.compile(
-                r"^" + re.escape(level) + r"$", re.IGNORECASE
-            ),
+            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
         }
         await boards(ctx, map_code, level, title, query)
 
@@ -142,9 +155,7 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
         title = f"{map_code} - LEVEL {level.upper()} - TOP 10 VERIFIED RECORDS:\n"
         query = {
             "code": map_code,
-            "level": re.compile(
-                r"^" + re.escape(level) + r"$", re.IGNORECASE
-            ),
+            "level": re.compile(r"^" + re.escape(level) + r"$", re.IGNORECASE),
             "verified": True,
         }
         await boards(ctx, map_code, level.upper(), title, query)

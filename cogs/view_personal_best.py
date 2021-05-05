@@ -1,3 +1,4 @@
+import logging
 import re
 import sys
 
@@ -84,8 +85,23 @@ class ViewPersonalBest(commands.Cog, name="Personal bests and leaderboards"):
 
         if len(embed_dict) > 0:
             for i, map_pbs in enumerate(embed_dict.values()):
-                embed.add_field(name=map_pbs["title"], value=map_pbs["value"],
-                                inline=False)
+                if len(map_pbs["value"]) > 1024:
+                    # if over 1024 char limit
+                    # split pbs dict value into list of individual pbs
+                    # and divide in half.. Add two fields instead of just one.
+                    delimiter_regex = r">.*\n>.*\n>.*\n━━━━━━━━━━━━\n"
+                    pb_split = re.findall(delimiter_regex, map_pbs["value"])
+                    pb_split_1 = pb_split[:len(pb_split) // 2]
+                    pb_split_2 = pb_split[len(pb_split) // 2:]
+                    embed.add_field(name=f"{map_pbs['title']} (1)",
+                                    value="".join(pb_split_1),
+                                    inline=False)
+                    embed.add_field(name=f"{map_pbs['title']} (2)",
+                                    value="".join(pb_split_2),
+                                    inline=False)
+                else:
+                    embed.add_field(name=map_pbs["title"], value=map_pbs["value"],
+                                    inline=False)
                 if (i + 1) % 3 == 0 or (i + 1) == len(embed_dict):
                     embeds.append(embed)
                     embed = discord.Embed(title=name)

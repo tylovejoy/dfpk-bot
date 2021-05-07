@@ -1,3 +1,5 @@
+from internal.utils import enum
+
 TYPES_OF_MAP = [
     "SINGLE",
     "MULTILEVEL",
@@ -159,3 +161,5 @@ PRETTY_NAMES = {
     "practicerange": "Practice Range",
     "framework": "Framework",
 }
+
+tournament_category = enum("HC", "TA", "MC", "BONUS")

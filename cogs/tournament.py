@@ -1,7 +1,5 @@
 from discord.ext import commands
 
-HC_CHANNEL_ID = 0
-
 
 class Tournament(commands.Cog, name="Tournament"):
     """Tournament"""
@@ -10,17 +8,16 @@ class Tournament(commands.Cog, name="Tournament"):
         self.bot = bot
 
     @commands.command(
-        help="",
-        brief="Submit times to hardcore tournament.",
-        aliases=["hardcore"]
+        help="", brief="Submit times to hardcore tournament.", aliases=["hardcore"]
     )
     async def hc(self, ctx):
         pass
 
     @commands.Cog.listener("on_message")
     async def hc_image(self, message):
-        if message.channel.id == HC_CHANNEL_ID:
-            pass
+        if message.channel.id != HC_CHANNEL_ID:
+            return
+
 
 
 def setup(bot):

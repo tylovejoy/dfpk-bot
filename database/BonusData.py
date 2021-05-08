@@ -5,15 +5,14 @@ from internal.database_init import instance
 
 
 @instance.register
-class TournamentData(Document):
+class BonusData(Document):
     """TournamentData database document."""
 
     posted_by = IntegerField(required=True, unique=True)
-    category = StringField(required=True)
     record = FloatField(required=True)
     attachment_url = StringField(required=True)
 
     class Meta:
         """MongoDb database collection name."""
 
-        collection_name = "TournamentData"
+        collection_name = "BonusData"

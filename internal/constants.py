@@ -162,4 +162,4 @@ PRETTY_NAMES = {
     "framework": "Framework",
 }
 
-tournament_category = enum("HC", "TA", "MC", "BONUS")
+tournament_category = enum(HC="HC", TA="TA", MC="MC", BONUS="BONUS")

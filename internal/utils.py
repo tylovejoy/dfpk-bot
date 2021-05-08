@@ -1,3 +1,2 @@
-def enum(*args):
-    enums = dict(zip(args, range(len(args))))
-    return type("Enum", (), enums)
+def enum(**kwargs):
+    return type('Enum', (), kwargs)

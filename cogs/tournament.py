@@ -111,7 +111,7 @@ class Tournament(commands.Cog, name="Tournament"):
         embed.add_field(
             name=f"Name: {discord.utils.find(lambda m: m.id == search.posted_by, ctx.guild.members).name}",
             value=(
-                f"> Category: {search.category}\n"
+                f"> Category: {category}\n"
                 f"> Record: {display_record(record_in_seconds)}\n"
             ),
             inline=False,
@@ -188,7 +188,7 @@ class Tournament(commands.Cog, name="Tournament"):
     )
     async def _timeattack_clear(self, ctx):
         msg = await ctx.send("Clearing all time attack times... Please wait.")
-        await TournamentData.delete_many({"category": "TIMEATTACK"})
+        #await TournamentData.delete_many({"category": "TIMEATTACK"})
         await msg.edit("All times in time attack have been cleared.")
 
 

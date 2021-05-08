@@ -5,7 +5,7 @@ from disputils import BotEmbedPaginator
 from database.BonusData import BonusData
 from database.HardcoreData import HardcoreData
 from database.MildcoreData import MildcoreData
-from database.TimeAttackData import TournamentData, TimeAttackData
+from database.TimeAttackData import TimeAttackData
 from internal.pb_utils import display_record
 
 if len(sys.argv) > 1:

@@ -159,4 +159,3 @@ PRETTY_NAMES = {
     "practicerange": "Practice Range",
     "framework": "Framework",
 }
-

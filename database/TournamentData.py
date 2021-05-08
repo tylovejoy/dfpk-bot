@@ -8,10 +8,10 @@ from internal.database_init import instance
 class TournamentData(Document):
     """TournamentData database document."""
 
-    code = StringField(required=True, unique=True)
-    posted_by = IntegerField(required=True)
+    posted_by = IntegerField(required=True, unique=True)
     category = StringField(required=True)
     record = FloatField(required=True)
+    attachment_url = StringField(required=True)
 
     class Meta:
         """MongoDb database collection name."""

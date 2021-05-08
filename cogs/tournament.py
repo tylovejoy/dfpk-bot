@@ -28,7 +28,7 @@ class Tournament(commands.Cog, name="Tournament"):
         if category is None:
             return
 
-        if not ctx.message.attachment:
+        if not ctx.message.attachments:
             await ctx.send(
                 "No attachment found. Please submit time with attachment in the same message."
             )
@@ -50,7 +50,7 @@ class Tournament(commands.Cog, name="Tournament"):
         )
 
         # If document is found, verifies if submitted time is faster (if verified).
-        if search and record_in_seconds >= search.record and search.verified is True:
+        if (search and (record_in_seconds >= search.record)) is True:
             await ctx.channel.send(
                 "Times submitted for the tournament needs to be faster than prior submissions."
             )
@@ -70,7 +70,7 @@ class Tournament(commands.Cog, name="Tournament"):
         embed = discord.Embed(title="Is this correct?")
         # Verification embed for user.
         embed.add_field(
-            name=f"Name: {search.name}",
+            name=f"Name: {discord.utils.find(lambda m: m.id == search.posted_by, ctx.guild.members).name}",
             value=(
                 f"> Category: {search.category}\n"
                 f"> Record: {display_record(record_in_seconds)}\n"
@@ -101,23 +101,32 @@ class Tournament(commands.Cog, name="Tournament"):
     @commands.group(pass_context=True, case_insensitive=True)
     async def view(self, ctx):
         if ctx.invoked_subcommand is None:
-            await self.bot.say(f"No, {ctx.subcommand_passed} is not cool")
+            embed = discord.Embed(
+                title="View Tournament Times",
+                description="Choose a specific category to view currently submitted times for that category.",
+            )
+            for cmd in self.bot.get_command("view").walk_commands():
+                embed.add_field(name=f"{cmd}", value=f"{cmd.help}", inline=False)
+            await ctx.send(embed=embed)
 
-    @view.command(name="ta")
-    async def _timeattack(self):
-        pass
+    @view.command(
+        name="ta", aliases=["timeattack", "time-attack"], help="View time attack times"
+    )
+    async def _timeattack(self, ctx):
+        await ctx.send("test")
 
-    @view.command(name="hc")
-    async def _mildcore(self):
-        pass
+    @view.command(name="mc", aliases=["mildcore"], help="View mildcore times")
+    async def _mildcore(self, ctx):
+        await ctx.send("test")
 
-    @view.command(name="hc")
-    async def _hardcore(self):
-        pass
+    @view.command(name="hc", aliases=["hardcore"], help="View hardcore times")
+    async def _hardcore(self, ctx):
+        await ctx.send("test")
 
-    @view.command(name="bonus")
-    async def _bonus(self):
-        pass
+    @view.command(name="bonus", help="View bonus times")
+    async def _bonus(self, ctx):
+        await ctx.send("test")
+
 
 def setup(bot):
     """Add Cog to Discord bot."""

@@ -99,12 +99,12 @@ class Tournament(commands.Cog, name="Tournament"):
                 _new_submission = BonusData
 
             search = _new_submission(
-                    **{
-                        "posted_by": ctx.author.id,
-                        "record": record_in_seconds,
-                        "attachment_url": ctx.message.attachments[0].url,
-                    }
-                )
+                **{
+                    "posted_by": ctx.author.id,
+                    "record": record_in_seconds,
+                    "attachment_url": ctx.message.attachments[0].url,
+                }
+            )
 
         embed = discord.Embed(title="Is this correct?")
         # Verification embed for user.
@@ -184,12 +184,34 @@ class Tournament(commands.Cog, name="Tournament"):
             await ctx.send(embed=embed)
 
     @clear.command(
-        name="ta", aliases=["timeattack", "time-attack"], help="View time attack times"
+        name="ta", aliases=["timeattack", "time-attack"], help="Clear time attack times"
     )
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _timeattack_clear(self, ctx):
         msg = await ctx.send("Clearing all time attack times... Please wait.")
-        #await TournamentData.delete_many({"category": "TIMEATTACK"})
-        await msg.edit("All times in time attack have been cleared.")
+        await TimeAttackData.collection.drop()
+        await msg.edit(content="All times in time attack have been cleared.")
+
+    @clear.command(name="mc", aliases=["mildcore"], help="Clear mildcore times")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def _mildcore_clear(self, ctx):
+        msg = await ctx.send("Clearing all mildcore times... Please wait.")
+        await MildcoreData.collection.drop()
+        await msg.edit(content="All times in mildcore have been cleared.")
+
+    @clear.command(name="hc", aliases=["hardcore"], help="Clear hardcore times")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def _hardcore_clear(self, ctx):
+        msg = await ctx.send("Clearing all hardcore times... Please wait.")
+        await HardcoreData.collection.drop()
+        await msg.edit(content="All times in hardcore have been cleared.")
+
+    @clear.command(name="bonus", help="Clear bonus times")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def _bonus_clear(self, ctx):
+        msg = await ctx.send("Clearing all bonus times... Please wait.")
+        await BonusData.collection.drop()
+        await msg.edit(content="All times in bonus have been cleared.")
 
 
 def setup(bot):

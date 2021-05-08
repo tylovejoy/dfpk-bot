@@ -1,3 +1,4 @@
+import logging
 import sys
 import discord
 from disputils import BotEmbedPaginator
@@ -34,25 +35,21 @@ async def tournament_boards(ctx, category):
     count = 0
     embed = discord.Embed(title=f"{category}")
     embeds = []
-    query = {
-        "category": category,
-    }
 
-    _data_category = TournamentData
     if category == "TIMEATTACK":
         _data_category = TimeAttackData
     elif category == "MILDCORE":
         _data_category = MildcoreData
     elif category == "HARDCORE":
         _data_category = HardcoreData
-    elif category == "BONUS":
+    else:  # "BONUS"
         _data_category = BonusData
 
-    data_amount = await _data_category.count_documents(query)
+    data_amount = await _data_category.count_documents()
 
-    async for entry in _data_category.find(query).sort("record", 1):
+    async for entry in _data_category.find().sort("record", 1):
         embed.add_field(
-            name=f"#{count + 1} - {discord.utils.find(lambda m: m.id == entry.posted_by, ctx.guild.members).name}",
+            name=f"#{count + 1} - {discord.utils.find(lambda m: m.id == entry.posted_by, ctx.guild.members)}",
             value=f"> Record: {display_record(entry.record)}\n",
             inline=False,
         )

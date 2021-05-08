@@ -75,15 +75,15 @@ class Tournament(commands.Cog, name="Tournament"):
 
         # Finds document
         if category == "TIMEATTACK":
-            _find_one = TimeAttackData.find_one({"posted_by": ctx.author.id})
+            _category_data = TimeAttackData
         elif category == "MILDCORE":
-            _find_one = MildcoreData.find_one({"posted_by": ctx.author.id})
+            _category_data = MildcoreData
         elif category == "HARDCORE":
-            _find_one = HardcoreData.find_one({"posted_by": ctx.author.id})
+            _category_data = HardcoreData
         else:  # "BONUS"
-            _find_one = BonusData.find_one({"posted_by": ctx.author.id})
+            _category_data = BonusData
 
-        search = await _find_one
+        search = await _category_data.find_one({"posted_by": ctx.author.id})
 
         # If document is found, verifies if submitted time is faster (if verified).
         if (search and (record_in_seconds >= search.record)) is True:
@@ -129,6 +129,7 @@ class Tournament(commands.Cog, name="Tournament"):
             await msg.edit(content="Submission accepted")
             # Update record
             search.record = record_in_seconds
+            search.attachment_url = ctx.message.attachments[0].url
             # Save document
             await search.commit()
 
@@ -141,6 +142,75 @@ class Tournament(commands.Cog, name="Tournament"):
             await msg.edit(
                 content="Submission timed out! Submission has not been accepted.",
             )
+
+    @commands.command(
+        help="Delete a submission to tournament. Optional argument <user> for mod usage.",
+        brief="Delete a submission to tournament",
+        name="delete"
+    )
+    async def _delete(self, ctx, user: discord.Member = None):
+        category = category_sort(ctx.message)
+        if category is None:
+            return
+
+        # Finds document
+        if category == "TIMEATTACK":
+            _category_data = TimeAttackData
+        elif category == "MILDCORE":
+            _category_data = MildcoreData
+        elif category == "HARDCORE":
+            _category_data = HardcoreData
+        else:  # "BONUS"
+            _category_data = BonusData
+
+        if user is None:
+            search_id = ctx.author.id
+        else:
+            search_id = user.id
+
+        search = await _category_data.find_one({"posted_by": search_id})
+
+        if not search:
+            await ctx.channel.send(
+                "Provided arguments might not exist. Nothing was deleted."
+            )
+            return
+
+        if search.posted_by != ctx.author.id:
+            for role in ctx.author.roles:
+                if role.id == constants_bot.ORG_ROLE_ID:
+                    break
+            else:
+                await ctx.channel.send(
+                    "You do not have sufficient permissions. Submission was not deleted."
+                )
+                return
+
+        embed = discord.Embed(title="Do you want to delete this?")
+        embed.add_field(
+            name=f"Name: {discord.utils.find(lambda m: m.id == search.posted_by, ctx.guild.members).name}",
+            value=(
+                f"> Category: {category}\n"
+                f"> Record: {display_record(search.record)}\n"
+            ),
+            inline=False,
+        )
+
+        msg = await ctx.send(embed=embed)
+        confirmed = await confirmation.confirm(ctx, msg)
+
+        if confirmed is True:
+            await msg.edit(content="Personal best deleted succesfully.")
+            await search.delete()
+        elif confirmed is False:
+            await msg.edit(content="Personal best was not deleted.")
+        elif confirmed is None:
+            await msg.edit(
+                content="Deletion timed out! Personal best has not been deleted."
+            )
+
+
+
 
     @commands.group(pass_context=True, case_insensitive=True)
     @viewable_channels()
@@ -272,7 +342,7 @@ class Tournament(commands.Cog, name="Tournament"):
         confirmed = await confirmation.confirm(ctx, confirmation_msg)
         if confirmed is True:
             channel = self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
-            await confirmation_msg.edit("Clearing screenshots...")
+            await confirmation_msg.edit(content="Clearing screenshots...")
             deleted = await channel.purge(limit=100)
             await confirmation_msg.edit(content=f"{len(deleted)} screenshots have been deleted.")
 
@@ -285,6 +355,10 @@ class Tournament(commands.Cog, name="Tournament"):
             await confirmation_msg.edit(
                 content="Timed out! Screenshots were not deleted.",
             )
+
+    @commands.command(name="announce", help="")
+    async def _announcement(self, ctx, message, mentions):
+        pass
 
 
 def setup(bot):

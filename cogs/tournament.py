@@ -8,7 +8,8 @@ from database.HardcoreData import HardcoreData
 from database.MildcoreData import MildcoreData
 from database.TimeAttackData import TimeAttackData
 from internal.pb_utils import time_convert, display_record
-from internal.tournament_utils import category_sort, tournament_boards
+from internal.tournament_utils import (category_sort, tournament_boards,
+                                       confirm_collection_drop, )
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -25,57 +26,6 @@ def viewable_channels():
         ]
 
     return commands.check(predicate)
-
-
-async def conf(ctx, category):
-    if category == "time attack":
-        _collection = TimeAttackData
-    elif category == "mildcore":
-        _collection = MildcoreData
-    elif category == "hardcore":
-        _collection = HardcoreData
-    elif category == "bonus":
-        _collection = BonusData
-
-    confirmation_msg = await ctx.send(
-        f"Are you sure you want to delete all {category + ' ' if category != 'all' else ''}times?"
-    )
-    confirmed = await confirmation.confirm(ctx, confirmation_msg)
-    if confirmed is True:
-
-        if category == "all":
-            msg_ta = await ctx.send("Clearing all time attack times... Please wait.")
-            await TimeAttackData.collection.drop()
-            await msg_ta.edit(content="All times in time attack have been cleared.")
-
-            msg_mc = await ctx.send("Clearing all mildcore times... Please wait.")
-            await MildcoreData.collection.drop()
-            await msg_mc.edit(content="All times in mildcore have been cleared.")
-
-            msg_hc = await ctx.send("Clearing all hardcore times... Please wait.")
-            await HardcoreData.collection.drop()
-            await msg_hc.edit(content="All times in hardcore have been cleared.")
-
-            msg_bonus = await ctx.send("Clearing all bonus times... Please wait.")
-            await BonusData.collection.drop()
-            await msg_bonus.edit(content="All times in bonus have been cleared.")
-
-        else:
-            msg = await ctx.send(f"Clearing {category} times... Please wait.")
-            await _collection.collection.drop()
-            await msg.edit(
-                content=f"All times {'in' if category != 'all' else ''} {category if category != 'all' else ''} have been cleared."
-            )
-
-    elif confirmed is False:
-        await confirmation_msg.edit(
-            content="Times were not cleared.",
-        )
-
-    elif confirmed is None:
-        await confirmation_msg.edit(
-            content="Timed out! Times were not cleared.",
-        )
 
 
 class Tournament(commands.Cog, name="Tournament"):
@@ -239,27 +189,27 @@ class Tournament(commands.Cog, name="Tournament"):
     )
     @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _timeattack_clear(self, ctx):
-        await conf(ctx, "time attack")
+        await confirm_collection_drop(ctx, "time attack")
 
     @clear.command(name="mc", aliases=["mildcore"], help="Clear mildcore times")
     @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _mildcore_clear(self, ctx):
-        await conf(ctx, "mildcore")
+        await confirm_collection_drop(ctx, "mildcore")
 
     @clear.command(name="hc", aliases=["hardcore"], help="Clear hardcore times")
     @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _hardcore_clear(self, ctx):
-        await conf(ctx, "hardcore")
+        await confirm_collection_drop(ctx, "hardcore")
 
     @clear.command(name="bonus", help="Clear bonus times")
     @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _bonus_clear(self, ctx):
-        await conf(ctx, "bonus")
+        await confirm_collection_drop(ctx, "bonus")
 
     @clear.command(name="all", help="Clear all times")
     @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _all_clear(self, ctx):
-        await conf(ctx, "all")
+        await confirm_collection_drop(ctx, "all")
 
     @commands.group(pass_context=True, case_insensitive=True)
     @commands.has_role(constants_bot.ORG_ROLE_ID)

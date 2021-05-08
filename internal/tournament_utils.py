@@ -11,7 +11,7 @@ from internal.pb_utils import display_record
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import constants_bot_test as constants_bot, constants
+        from internal import constants_bot_test as constants_bot, constants, confirmation
 else:
     from internal import constants_bot_prod as constants_bot
 
@@ -64,3 +64,54 @@ async def tournament_boards(ctx, category):
         await paginator.run()
     else:
         await ctx.send(f"No times exist for the {category.lower()} tournament!")
+
+
+async def confirm_collection_drop(ctx, category):
+    if category == "time attack":
+        _collection = TimeAttackData
+    elif category == "mildcore":
+        _collection = MildcoreData
+    elif category == "hardcore":
+        _collection = HardcoreData
+    elif category == "bonus":
+        _collection = BonusData
+
+    confirmation_msg = await ctx.send(
+        f"Are you sure you want to delete all {category + ' ' if category != 'all' else ''}times?"
+    )
+    confirmed = await confirmation.confirm(ctx, confirmation_msg)
+    if confirmed is True:
+
+        if category == "all":
+            msg_ta = await ctx.send("Clearing all time attack times... Please wait.")
+            await TimeAttackData.collection.drop()
+            await msg_ta.edit(content="All times in time attack have been cleared.")
+
+            msg_mc = await ctx.send("Clearing all mildcore times... Please wait.")
+            await MildcoreData.collection.drop()
+            await msg_mc.edit(content="All times in mildcore have been cleared.")
+
+            msg_hc = await ctx.send("Clearing all hardcore times... Please wait.")
+            await HardcoreData.collection.drop()
+            await msg_hc.edit(content="All times in hardcore have been cleared.")
+
+            msg_bonus = await ctx.send("Clearing all bonus times... Please wait.")
+            await BonusData.collection.drop()
+            await msg_bonus.edit(content="All times in bonus have been cleared.")
+
+        else:
+            msg = await ctx.send(f"Clearing {category} times... Please wait.")
+            await _collection.collection.drop()
+            await msg.edit(
+                content=f"All times {'in' if category != 'all' else ''} {category if category != 'all' else ''} have been cleared."
+            )
+
+    elif confirmed is False:
+        await confirmation_msg.edit(
+            content="Times were not cleared.",
+        )
+
+    elif confirmed is None:
+        await confirmation_msg.edit(
+            content="Timed out! Times were not cleared.",
+        )

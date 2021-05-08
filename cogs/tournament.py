@@ -98,6 +98,26 @@ class Tournament(commands.Cog, name="Tournament"):
                 content="Submission timed out! Submission has not been accepted.",
             )
 
+    @commands.group(pass_context=True, case_insensitive=True)
+    async def view(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await self.bot.say(f"No, {ctx.subcommand_passed} is not cool")
+
+    @view.command(name="ta")
+    async def _timeattack(self):
+        pass
+
+    @view.command(name="hc")
+    async def _mildcore(self):
+        pass
+
+    @view.command(name="hc")
+    async def _hardcore(self):
+        pass
+
+    @view.command(name="bonus")
+    async def _bonus(self):
+        pass
 
 def setup(bot):
     """Add Cog to Discord bot."""

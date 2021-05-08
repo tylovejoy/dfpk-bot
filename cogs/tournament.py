@@ -37,10 +37,9 @@ async def conf(ctx, category):
     elif category == "bonus":
         _collection = BonusData
 
-
-
     confirmation_msg = await ctx.send(
-        f"Are you sure you want to delete all {category + ' ' if category != 'all' else ''}times?")
+        f"Are you sure you want to delete all {category + ' ' if category != 'all' else ''}times?"
+    )
     confirmed = await confirmation.confirm(ctx, confirmation_msg)
     if confirmed is True:
 
@@ -65,9 +64,8 @@ async def conf(ctx, category):
             msg = await ctx.send(f"Clearing {category} times... Please wait.")
             await _collection.collection.drop()
             await msg.edit(
-                content=f"All times {'in' if category != 'all' else ''} {category if category != 'all' else ''} have been cleared.")
-
-
+                content=f"All times {'in' if category != 'all' else ''} {category if category != 'all' else ''} have been cleared."
+            )
 
     elif confirmed is False:
         await confirmation_msg.edit(
@@ -262,6 +260,38 @@ class Tournament(commands.Cog, name="Tournament"):
     @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _all_clear(self, ctx):
         await conf(ctx, "all")
+
+    @commands.group(pass_context=True, case_insensitive=True)
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def export(self, ctx):
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(
+                title="Export Tournament Screenshots",
+                description="Grab all screenshots from a specific tournament category.",
+            )
+            for cmd in self.bot.get_command("export").walk_commands():
+                embed.add_field(name=f"{cmd}", value=f"{cmd.help}", inline=False)
+            await ctx.send(embed=embed)
+
+    @export.command(
+        name="ta",
+        aliases=["timeattack", "time-attack"],
+        help="Export time attack screenshots",
+    )
+    async def _export_timeattack(self, ctx):
+        pass
+
+    @export.command(name="mc", aliases=["mildcore"], help="Export mildcore screenshots")
+    async def _export_mildcore(self, ctx):
+        pass
+
+    @export.command(name="hc", aliases=["hardcore"], help="Export hardcore screenshots")
+    async def _export_hardcore(self, ctx):
+        pass
+
+    @export.command(name="bonus", help="Export bonus screenshots")
+    async def _export_bonus(self, ctx):
+        pass
 
 
 def setup(bot):

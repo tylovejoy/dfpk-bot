@@ -213,6 +213,24 @@ class Tournament(commands.Cog, name="Tournament"):
         await BonusData.collection.drop()
         await msg.edit(content="All times in bonus have been cleared.")
 
+    @clear.command(name="all", help="Clear all times")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def _all_clear(self, ctx):
+        msg_ta = await ctx.send("Clearing all time attack times... Please wait.")
+        await TimeAttackData.collection.drop()
+        await msg_ta.edit(content="All times in time attack have been cleared.")
+
+        msg_mc = await ctx.send("Clearing all mildcore times... Please wait.")
+        await MildcoreData.collection.drop()
+        await msg_mc.edit(content="All times in mildcore have been cleared.")
+
+        msg_hc = await ctx.send("Clearing all hardcore times... Please wait.")
+        await HardcoreData.collection.drop()
+        await msg_hc.edit(content="All times in hardcore have been cleared.")
+
+        msg_bonus = await ctx.send("Clearing all bonus times... Please wait.")
+        await BonusData.collection.drop()
+        await msg_bonus.edit(content="All times in bonus have been cleared.")
 
 def setup(bot):
     """Add Cog to Discord bot."""

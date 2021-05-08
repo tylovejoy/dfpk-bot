@@ -232,28 +232,59 @@ class Tournament(commands.Cog, name="Tournament"):
         aliases=["timeattack", "time-attack"],
         help="Export time attack screenshots",
     )
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _export_timeattack(self, ctx):
         await exporter(
             ctx, "TIMEATTACK", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
         )
 
     @export.command(name="mc", aliases=["mildcore"], help="Export mildcore screenshots")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _export_mildcore(self, ctx):
         await exporter(
             ctx, "MILDCORE", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
         )
 
     @export.command(name="hc", aliases=["hardcore"], help="Export hardcore screenshots")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _export_hardcore(self, ctx):
         await exporter(
             ctx, "HARDCORE", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
         )
 
     @export.command(name="bonus", help="Export bonus screenshots")
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
     async def _export_bonus(self, ctx):
         await exporter(
             ctx, "BONUS", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
         )
+
+    @commands.command(
+        name="deletess",
+        help="Deletes all screenshots in export channel",
+        brief="Deletes all screenshots in export channel",
+    )
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def _delete_screenshots(self, ctx):
+        confirmation_msg = await ctx.send(
+            f"Are you sure you want to delete all screenshots in the export channel?"
+        )
+        confirmed = await confirmation.confirm(ctx, confirmation_msg)
+        if confirmed is True:
+            channel = self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
+            await confirmation_msg.edit("Clearing screenshots...")
+            deleted = await channel.purge(limit=100)
+            await confirmation_msg.edit(content=f"{len(deleted)} screenshots have been deleted.")
+
+        elif confirmed is False:
+            await confirmation_msg.edit(
+                content="Screenshots were not deleted.",
+            )
+
+        elif confirmed is None:
+            await confirmation_msg.edit(
+                content="Timed out! Screenshots were not deleted.",
+            )
 
 
 def setup(bot):

@@ -1,5 +1,5 @@
 import sys
-from internal.tournament_utils import tournament_category
+from internal.tournament_utils import TOURNAMENT_CATEGORY
 
 from discord.ext import commands
 
@@ -24,17 +24,8 @@ class Tournament(commands.Cog, name="Tournament"):
 
     @commands.Cog.listener("on_message")
     async def submit_with_image(self, message):
+        pass
 
-        if message.channel.id == constants_bot.TA_CHANNEL_ID:
-            which_category = tournament_category.TA
-        elif message.channel.id == constants_bot.MC_CHANNEL_ID:
-            which_category = tournament_category.MC
-        elif message.channel.id == constants_bot.HC_CHANNEL_ID:
-            which_category = tournament_category.HC
-        elif message.channel.id == constants_bot.BONUS_CHANNEL_ID:
-            which_category = tournament_category.BONUS
-        else:
-            return
 
 
 

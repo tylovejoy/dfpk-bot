@@ -15,20 +15,38 @@ else:
     from internal import constants_bot_prod as constants_bot
 
 
+def viewable_channels():
+    def predicate(ctx):
+        return ctx.channel.id in [
+            constants_bot.TOURNAMENT_CHAT_CHANNEL_ID,
+            constants_bot.ORG_CHANNEL_ID,
+        ]
+
+    return commands.check(predicate)
+
+
 class Tournament(commands.Cog, name="Tournament"):
     """Tournament"""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @staticmethod
-    def viewable_channels():
-        def predicate(ctx):
-            return ctx.message.channel.id == 85309593344815104
+    def cog_check(self, ctx):
+        if ctx.channel.id in [
+            constants_bot.TOURNAMENT_CHAT_CHANNEL_ID,
+            constants_bot.HC_CHANNEL_ID,
+            constants_bot.TA_CHANNEL_ID,
+            constants_bot.MC_CHANNEL_ID,
+            constants_bot.BONUS_CHANNEL_ID,
+            constants_bot.ORG_CHANNEL_ID,
+        ]:
+            return True
 
-        return commands.check(predicate)
-
-    @commands.command(name="submit", help="", brief="Submit times to tournament.")
+    @commands.command(
+        name="submit",
+        help="Record must be in HH:MM:SS.ss format. Attach a screenshot to the submission message.",
+        brief="Submit times to tournament.",
+    )
     async def submit(self, ctx, record):
 
         category = category_sort(ctx.message)
@@ -106,6 +124,7 @@ class Tournament(commands.Cog, name="Tournament"):
             )
 
     @commands.group(pass_context=True, case_insensitive=True)
+    @viewable_channels()
     async def view(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(
@@ -119,18 +138,22 @@ class Tournament(commands.Cog, name="Tournament"):
     @view.command(
         name="ta", aliases=["timeattack", "time-attack"], help="View time attack times"
     )
+    @viewable_channels()
     async def _timeattack(self, ctx):
         await tournament_boards(ctx, "TIMEATTACK")
 
     @view.command(name="mc", aliases=["mildcore"], help="View mildcore times")
+    @viewable_channels()
     async def _mildcore(self, ctx):
         await tournament_boards(ctx, "MILDCORE")
 
     @view.command(name="hc", aliases=["hardcore"], help="View hardcore times")
+    @viewable_channels()
     async def _hardcore(self, ctx):
         await tournament_boards(ctx, "HARDCORE")
 
     @view.command(name="bonus", help="View bonus times")
+    @viewable_channels()
     async def _bonus(self, ctx):
         await tournament_boards(ctx, "BONUS")
 

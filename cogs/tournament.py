@@ -4,7 +4,7 @@ import discord
 
 from database.TournamentData import TournamentData
 from internal.pb_utils import time_convert, display_record
-from internal.tournament_utils import category_sort
+from internal.tournament_utils import category_sort, tournament_boards
 
 from discord.ext import commands
 
@@ -20,6 +20,13 @@ class Tournament(commands.Cog, name="Tournament"):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @staticmethod
+    def viewable_channels():
+        def predicate(ctx):
+            return ctx.message.channel.id == 85309593344815104
+
+        return commands.check(predicate)
 
     @commands.command(name="submit", help="", brief="Submit times to tournament.")
     async def submit(self, ctx, record):
@@ -113,19 +120,19 @@ class Tournament(commands.Cog, name="Tournament"):
         name="ta", aliases=["timeattack", "time-attack"], help="View time attack times"
     )
     async def _timeattack(self, ctx):
-        await ctx.send("test")
+        await tournament_boards(ctx, "TIMEATTACK")
 
     @view.command(name="mc", aliases=["mildcore"], help="View mildcore times")
     async def _mildcore(self, ctx):
-        await ctx.send("test")
+        await tournament_boards(ctx, "MILDCORE")
 
     @view.command(name="hc", aliases=["hardcore"], help="View hardcore times")
     async def _hardcore(self, ctx):
-        await ctx.send("test")
+        await tournament_boards(ctx, "HARDCORE")
 
     @view.command(name="bonus", help="View bonus times")
     async def _bonus(self, ctx):
-        await ctx.send("test")
+        await tournament_boards(ctx, "BONUS")
 
 
 def setup(bot):

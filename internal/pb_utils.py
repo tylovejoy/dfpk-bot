@@ -11,7 +11,6 @@ from database.WorldRecords import WorldRecords
 
 
 async def boards(ctx, map_code, level, title, query):
-    """Display boards for scoreboard and leaderboard commands."""
     count = 1
     exists = False
     embed = discord.Embed(title=f"{title}")

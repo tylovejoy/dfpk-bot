@@ -11,7 +11,11 @@ from internal.pb_utils import display_record
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
-        from internal import constants_bot_test as constants_bot, constants, confirmation
+        from internal import (
+            constants_bot_test as constants_bot,
+            constants,
+            confirmation,
+        )
 else:
     from internal import constants_bot_prod as constants_bot
 
@@ -64,6 +68,30 @@ async def tournament_boards(ctx, category):
         await paginator.run()
     else:
         await ctx.send(f"No times exist for the {category.lower()} tournament!")
+
+
+async def exporter(ctx, category, channel):
+    if category == "TIMEATTACK":
+        _data_category = TimeAttackData
+    elif category == "MILDCORE":
+        _data_category = MildcoreData
+    elif category == "HARDCORE":
+        _data_category = HardcoreData
+    else:  # "BONUS"
+        _data_category = BonusData
+
+    async for entry in _data_category.find().sort("record", 1):
+        username = discord.utils.find(
+            lambda m: m.id == entry.posted_by, ctx.guild.members
+        )
+
+        embed = discord.Embed(
+            title=username.name,
+            url=entry.attachment_url,
+        )
+        embed.add_field(name=category, value=f"{display_record(entry.record)}")
+        embed.set_image(url=entry.attachment_url)
+        await channel.send(embed=embed)
 
 
 async def confirm_collection_drop(ctx, category):

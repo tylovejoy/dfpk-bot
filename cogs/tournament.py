@@ -8,8 +8,12 @@ from database.HardcoreData import HardcoreData
 from database.MildcoreData import MildcoreData
 from database.TimeAttackData import TimeAttackData
 from internal.pb_utils import time_convert, display_record
-from internal.tournament_utils import (category_sort, tournament_boards,
-                                       confirm_collection_drop, )
+from internal.tournament_utils import (
+    category_sort,
+    tournament_boards,
+    confirm_collection_drop,
+    exporter,
+)
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -229,19 +233,27 @@ class Tournament(commands.Cog, name="Tournament"):
         help="Export time attack screenshots",
     )
     async def _export_timeattack(self, ctx):
-        pass
+        await exporter(
+            ctx, "TIMEATTACK", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
+        )
 
     @export.command(name="mc", aliases=["mildcore"], help="Export mildcore screenshots")
     async def _export_mildcore(self, ctx):
-        pass
+        await exporter(
+            ctx, "MILDCORE", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
+        )
 
     @export.command(name="hc", aliases=["hardcore"], help="Export hardcore screenshots")
     async def _export_hardcore(self, ctx):
-        pass
+        await exporter(
+            ctx, "HARDCORE", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
+        )
 
     @export.command(name="bonus", help="Export bonus screenshots")
     async def _export_bonus(self, ctx):
-        pass
+        await exporter(
+            ctx, "BONUS", self.bot.get_channel(constants_bot.EXPORT_SS_CHANNEL_ID)
+        )
 
 
 def setup(bot):

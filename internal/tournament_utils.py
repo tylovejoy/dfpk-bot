@@ -38,10 +38,10 @@ async def tournament_boards(ctx, category):
     async for entry in TournamentData.find(query).sort("record", 1):
         embed.add_field(
             name=f"#{count + 1} - {discord.utils.find(lambda m: m.id == entry.posted_by, ctx.guild.members).name}",
-            value=(f"> Record: {display_record(entry.record)}\n"),
+            value=f"> Record: {display_record(entry.record)}\n",
             inline=False,
         )
-        if count % 10 == 0 or count == (data_amount - 1):
+        if (count + 1) % 10 == 0 or (count + 1) == data_amount:
             embeds.append(embed)
             embed = discord.Embed(title=category)
 

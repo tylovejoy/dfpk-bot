@@ -10,6 +10,7 @@ class TournamentData(Document):
 
     code = StringField(required=True, unique=True)
     posted_by = IntegerField(required=True)
+    category = StringField(required=True)
     record = FloatField(required=True)
 
     class Meta:

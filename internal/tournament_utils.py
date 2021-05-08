@@ -2,7 +2,10 @@ import sys
 import discord
 from disputils import BotEmbedPaginator
 
-from database.TournamentData import TournamentData
+from database.BonusData import BonusData
+from database.HardcoreData import HardcoreData
+from database.MildcoreData import MildcoreData
+from database.TimeAttackData import TournamentData, TimeAttackData
 from internal.pb_utils import display_record
 
 if len(sys.argv) > 1:
@@ -34,8 +37,20 @@ async def tournament_boards(ctx, category):
     query = {
         "category": category,
     }
-    data_amount = await TournamentData.count_documents(query)
-    async for entry in TournamentData.find(query).sort("record", 1):
+
+    _data_category = TournamentData
+    if category == "TIMEATTACK":
+        _data_category = TimeAttackData
+    elif category == "MILDCORE":
+        _data_category = MildcoreData
+    elif category == "HARDCORE":
+        _data_category = HardcoreData
+    elif category == "BONUS":
+        _data_category = BonusData
+
+    data_amount = await _data_category.count_documents(query)
+
+    async for entry in _data_category.find(query).sort("record", 1):
         embed.add_field(
             name=f"#{count + 1} - {discord.utils.find(lambda m: m.id == entry.posted_by, ctx.guild.members).name}",
             value=f"> Record: {display_record(entry.record)}\n",

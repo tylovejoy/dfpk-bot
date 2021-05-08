@@ -1,12 +1,14 @@
 import sys
 
 import discord
+from discord.ext import commands
 
-from database.TournamentData import TournamentData
+from database.BonusData import BonusData
+from database.HardcoreData import HardcoreData
+from database.MildcoreData import MildcoreData
+from database.TimeAttackData import TimeAttackData
 from internal.pb_utils import time_convert, display_record
 from internal.tournament_utils import category_sort, tournament_boards
-
-from discord.ext import commands
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "test":
@@ -67,12 +69,16 @@ class Tournament(commands.Cog, name="Tournament"):
             return
 
         # Finds document
-        search = await TournamentData.find_one(
-            {
-                "posted_by": ctx.author.id,
-                "category": category,
-            }
-        )
+        if category == "TIMEATTACK":
+            _find_one = TimeAttackData.find_one({"posted_by": ctx.author.id})
+        elif category == "MILDCORE":
+            _find_one = MildcoreData.find_one({"posted_by": ctx.author.id})
+        elif category == "HARDCORE":
+            _find_one = HardcoreData.find_one({"posted_by": ctx.author.id})
+        else:  # "BONUS"
+            _find_one = BonusData.find_one({"posted_by": ctx.author.id})
+
+        search = await _find_one
 
         # If document is found, verifies if submitted time is faster (if verified).
         if (search and (record_in_seconds >= search.record)) is True:
@@ -83,14 +89,22 @@ class Tournament(commands.Cog, name="Tournament"):
 
         # Create new TournamentData document, if none exists.
         if not search:
-            search = TournamentData(
-                **{
-                    "posted_by": ctx.author.id,
-                    "record": record_in_seconds,
-                    "category": category,
-                    "attachment_url": ctx.message.attachments[0].url,
-                }
-            )
+            if category == "TIMEATTACK":
+                _new_submission = TimeAttackData
+            elif category == "MILDCORE":
+                _new_submission = MildcoreData
+            elif category == "HARDCORE":
+                _new_submission = HardcoreData
+            else:  # "BONUS"
+                _new_submission = BonusData
+
+            search = _new_submission(
+                    **{
+                        "posted_by": ctx.author.id,
+                        "record": record_in_seconds,
+                        "attachment_url": ctx.message.attachments[0].url,
+                    }
+                )
 
         embed = discord.Embed(title="Is this correct?")
         # Verification embed for user.
@@ -156,6 +170,26 @@ class Tournament(commands.Cog, name="Tournament"):
     @viewable_channels()
     async def _bonus(self, ctx):
         await tournament_boards(ctx, "BONUS")
+
+    @commands.group(pass_context=True, case_insensitive=True)
+    @commands.has_role(constants_bot.ORG_ROLE_ID)
+    async def clear(self, ctx):
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(
+                title="Clear Tournament Times",
+                description="Clear all times from a specific tournament category.",
+            )
+            for cmd in self.bot.get_command("clear").walk_commands():
+                embed.add_field(name=f"{cmd}", value=f"{cmd.help}", inline=False)
+            await ctx.send(embed=embed)
+
+    @clear.command(
+        name="ta", aliases=["timeattack", "time-attack"], help="View time attack times"
+    )
+    async def _timeattack_clear(self, ctx):
+        msg = await ctx.send("Clearing all time attack times... Please wait.")
+        await TournamentData.delete_many({"category": "TIMEATTACK"})
+        await msg.edit("All times in time attack have been cleared.")
 
 
 def setup(bot):
